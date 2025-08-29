@@ -6,29 +6,33 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:43:48 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/08/28 14:49:56 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/08/29 17:08:37 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "./include/webserv.hpp"
 
-
-
-
 int main(int argc, char **argv)
 {
-    if (argc != 2 || (argc == 2 && !argv[1][0]))
+    std::string file;
+
+    if (argc == 2 && argv[1][0])
     {
-        std::cerr << "Use parameter: ./webserv <file config path>" << std::endl;
+        std::istringstream iss(argv[1]);
+        
+        if (!(iss >> file))
+            throw std::runtime_error("Error: could not open file.");       
+    }
+    else if (argc == 1)
+    {
+        file = "./conf.d/webserv.conf";
+    }
+    else
+    {
+        std::cerr << "Error: File config not found." << std::endl;
         exit(EXIT_FAILURE);
     }
     
-    std::istringstream iss(argv[1]);
-    std::string file;
-    
-    if (!(iss >> file))
-        throw std::runtime_error("Error: could not open file.");
-
     try
     {
         ConfigParser parser(file);

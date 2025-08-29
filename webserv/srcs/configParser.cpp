@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/08/28 15:03:14 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/08/29 17:10:01 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,21 +67,12 @@ void ConfigParser::expectChar(std::istream &input, char expected)
     }
 }
 
-int ConfigParser::toInt(const std::string &s)
-{
-    std::stringstream ss(s);
-    int val;
-    if (!(ss >> val))
-        throw std::runtime_error("Invalid number: " + s);
-    return val;
-}
-
 void ConfigParser::parseHttpBlock(std::istream &input, HttpConfig &httpConfig)
 {
     std::string token;
     while (input >> token)
     {
-        if (token == "}") break; // fin http
+        if (token == "}") break;
 
         if (token == "server")
         {
