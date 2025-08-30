@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/08/29 17:10:01 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/08/30 15:16:22 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,12 +95,23 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &config)
     {
         if (token == "}") break;
 
-        if (token == "listen")
+        else if (token == "listen")
         {
-            std::string portStr;
-            if (!(input >> portStr))
-                throw std::runtime_error("Missing listen port");
-            config.listenPort = toInt(portStr);
+            std::string addr;
+            if (!(input >> addr))
+                throw std::runtime_error("Missing listen address");
+
+            size_t colon = addr.find(':');
+            if (colon != std::string::npos)
+            {
+                config.host = addr.substr(0, colon);
+                config.listenPort = toInt(addr.substr(colon + 1));
+            }
+            else
+            {
+                config.host = "0.0.0.0";
+                config.listenPort = toInt(addr);
+            }
             expectChar(input, ';');
         }
         else if (token == "root")
@@ -125,6 +136,35 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &config)
                 throw std::runtime_error("Missing ';' after index directive");
             }
         }
+        else if (token == "client_max_body_size")
+        {
+            std::string sizeStr;
+            if (!(input >> sizeStr))
+                throw std::runtime_error("Missing client_max_body_size value");
+
+            char unit = sizeStr[sizeStr.size() - 1];
+            size_t multiplier = 1;
+
+            if (unit == 'K' || unit == 'k') multiplier = 1024, sizeStr = sizeStr.substr(0, sizeStr.size() - 1);
+            else if (unit == 'M' || unit == 'm') multiplier = 1024 * 1024, sizeStr = sizeStr.substr(0, sizeStr.size() - 1);
+            else if (unit == 'G' || unit == 'g') multiplier = 1024 * 1024 * 1024, sizeStr = sizeStr.substr(0, sizeStr.size() - 1);
+
+            config.clientMaxBodySize = static_cast<size_t>(toInt(sizeStr)) * multiplier;
+            expectChar(input, ';');
+        }
+        else if (token == "error_page")
+        {
+            std::string codeStr, path;
+            if (!(input >> codeStr >> path))
+                throw std::runtime_error("Invalid error_page directive");
+
+            int code = toInt(codeStr);
+            if (path[path.size() - 1] == ';')
+                path = path.substr(0, path.size() - 1);
+            else expectChar(input, ';');
+
+            config.errorPages[code] = path;
+        }
         else if (token == "location")
         {
             LocationConfig loc;
@@ -140,6 +180,7 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &config)
     }
 }
 
+
 void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
 {
     std::string token;
@@ -152,11 +193,55 @@ void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
         if (value.empty())
             throw std::runtime_error("Missing value for directive: " + token);
 
+        // trim
         size_t start = value.find_first_not_of(" \t");
         size_t end   = value.find_last_not_of(" \t");
         if (start != std::string::npos)
             value = value.substr(start, end - start + 1);
 
-        loc.directives[token] = value;
+        // directives known to the location
+        if (token == "methods")
+        {
+            std::stringstream ss(value);
+            std::string method;
+            while (ss >> method)
+                loc.methods.push_back(method);
+        }
+        else if (token == "autoindex")
+        {
+            if (value == "on") loc.autoindex = true;
+            else loc.autoindex = false;
+        }
+        else if (token == "index")
+        {
+            std::stringstream ss(value);
+            std::string file;
+            while (ss >> file)
+                loc.indexFiles.push_back(file);
+        }
+        else if (token == "root")
+            loc.root = value;
+        else if (token == "upload_dir")
+            loc.uploadDir = value;
+        else if (token == "return")
+        {
+            std::stringstream ss(value);
+            ss >> loc.returnCode;
+            if (ss >> loc.returnPath) {} // optional path
+        }
+        else if (token == "redirect")
+        {
+            loc.returnCode = 301;   // code HTTP pour redirection permanente
+            loc.returnPath = value;  // chemin de redirection
+        }
+        else if (token == "default_file") loc.defaultFile = value;
+        else if (token == "cgi_extension") loc.cgiExtension = value;
+        else if (token == "cgi_path") loc.cgiPath = value;
+        else
+        {
+            // fallback for any unknown directive
+            loc.directives[token] = value;
+        }
     }
 }
+
