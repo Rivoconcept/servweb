@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 13:30:58 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/08/30 14:11:43 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/08 20:00:39 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,6 +63,7 @@ class ConfigParser
 {
     private:
         std::string _filePath;
+        std::string _fileContent;
 
         void expectChar(std::istream &input, char expected);
         void parseHttpBlock(std::istream &input, HttpConfig &httpConfig);
@@ -74,7 +75,7 @@ class ConfigParser
         ConfigParser(const ConfigParser& other);
         ConfigParser& operator=(const ConfigParser& other);
         ~ConfigParser();
-        
+
         HttpConfig parse();
 
 };

@@ -1,22 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   toInt.cpp                                          :+:      :+:    :+:   */
+/*   putFileContent.cpp                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/28 13:42:35 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/08/29 17:08:04 by rhanitra         ###   ########.fr       */
+/*   Created: 2025/09/08 19:31:19 by rhanitra          #+#    #+#             */
+/*   Updated: 2025/09/08 19:39:13 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/utils.hpp"
 
-int toInt(const std::string &s)
+std::string ftPutFileContent(const std::string& fileName)
 {
-    std::stringstream ss(s);
-    int val;
-    if (!(ss >> val))
-        throw std::runtime_error("Invalid number: " + s);
-    return val;
+    std::string fileContent;
+    std::ifstream ifs(fileName.c_str());
+    if (!ifs)
+        throw std::runtime_error("could not open " + fileName);
+
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+        fileContent += line;
+        fileContent += "\n";
+    }
+    ifs.close();
+    return (fileContent);
 }

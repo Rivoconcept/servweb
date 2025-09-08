@@ -1,26 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils.hpp                                          :+:      :+:    :+:   */
+/*   ftToInt.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/08 19:47:01 by rhanitra         ###   ########.fr       */
+/*   Created: 2025/08/28 13:42:35 by rhanitra          #+#    #+#             */
+/*   Updated: 2025/09/08 19:39:50 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef UTILS_HPP
-#define UTILS_HPP
+#include "../include/utils.hpp"
 
-#include <stdexcept>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <vector>
-
-int ftToInt(const std::string &s);
-std::string ftPutFileContent(const std::string& fileName);
-std::vector<std::string> ftSplitStr(const std::string& str, const std::string& delimiter);
-
-#endif
+int ftToInt(const std::string &s)
+{
+    std::stringstream ss(s);
+    int val;
+    if (!(ss >> val))
+        throw std::runtime_error("Invalid number: " + s);
+    return val;
+}
