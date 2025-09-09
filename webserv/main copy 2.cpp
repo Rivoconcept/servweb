@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:43:48 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/08/29 17:08:37 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/09 19:03:00 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,10 +18,7 @@ int main(int argc, char **argv)
 
     if (argc == 2 && argv[1][0])
     {
-        std::istringstream iss(argv[1]);
-        
-        if (!(iss >> file))
-            throw std::runtime_error("Error: could not open file.");       
+        file = argv[1];  
     }
     else if (argc == 1)
     {
@@ -29,8 +26,8 @@ int main(int argc, char **argv)
     }
     else
     {
-        std::cerr << "Error: File config not found." << std::endl;
-        exit(EXIT_FAILURE);
+        std::cerr << "Use: " << argv[0] << " [config_file]" << std::endl;
+        return EXIT_FAILURE;
     }
     
     try
