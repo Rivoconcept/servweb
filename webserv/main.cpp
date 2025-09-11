@@ -3,14 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:43:48 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/09 19:05:31 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/11 08:53:53 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./include/webserv.hpp"
+#include "./include/httpConfig.hpp"
 
 int main(int argc, char **argv)
 {
