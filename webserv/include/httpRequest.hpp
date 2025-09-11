@@ -1,6 +1,19 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   httpRequest.hpp                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/11 17:12:20 by rhanitra          #+#    #+#             */
+/*   Updated: 2025/09/11 17:12:21 by rhanitra         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef HTTPREQUEST_HPP
 #define HTTPREQUEST_HPP
 
+#include "utils.hpp"
 #include <iostream>
 #include <sstream>
 #include <stdexcept>

@@ -109,7 +109,7 @@ Liste des méthodes HTTP acceptées pour la route.
 
 Redirections HTTP.
 
-Répertoire où chercher le fichier demandé (par ex. si l’URL /kapouet pointe sur /tmp/www, alors /kapouet/pouic/toto/pouet sera cherché dans /tmp/www/pouic/toto/pouet).
+Répertoire où chercher le fichier demandé (par ex. si l’URL /kapouet pointe sur /tmp/www/, alors /kapouet/pouic/toto/pouet sera cherché dans /tmp/www/pouic/toto/pouet).
 
 Activation/désactivation du listing de répertoire.
 

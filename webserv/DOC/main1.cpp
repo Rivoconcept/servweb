@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   main1.cpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:43:48 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/11 08:54:04 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/09/11 17:12:45 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "./include/httpConfig.hpp"
+#include "./include/httpRequest.hpp"
 
 int main(int argc, char **argv)
 {
@@ -35,11 +36,6 @@ int main(int argc, char **argv)
         ConfigParser parser(file);
         HttpConfig config = parser.parse();
 
-        std::cout << "Parsed " << config.servers.size() << " server block(s)." << std::endl;
-        for (size_t i = 0; i < config.servers.size(); ++i)
-        {
-            std::cout << "Server " << i << " listens on port " << config.servers[i].listenPort << std::endl;
-        }
     }
     catch (const std::exception& e)
     {

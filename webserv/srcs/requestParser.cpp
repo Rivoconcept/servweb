@@ -64,7 +64,7 @@ void HttpRequestParser::parseHeaders(const std::vector<std::string> &headerLines
         if (key == "Host")
             parseHostHeader(value, request);
         else if (key == "Content-Length")
-            request.contentLength = static_cast<size_t>(atoi(value.c_str()));
+            request.contentLength = static_cast<size_t>(ftToInt(value.c_str()));
         else if (key == "Content-Type")
         {
             size_t pos = value.find("boundary=");
@@ -103,7 +103,7 @@ void HttpRequestParser::parseHostHeader(const std::string &hostHeader, HttpReque
     if (colonPos != std::string::npos)
     {
         request.host = hostHeader.substr(0, colonPos);
-        request.port = atoi(hostHeader.substr(colonPos + 1).c_str());
+        request.port = ftToInt(hostHeader.substr(colonPos + 1).c_str());
     }
     else
     {
