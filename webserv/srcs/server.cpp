@@ -3,14 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/11 18:50:39 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/12 14:11:12 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpServer.hpp"
+#include "../include/httpResponse.hpp"
 
 Server::Server(const HttpConfig &config) : _config(config)
 {
@@ -88,27 +89,24 @@ void Server::handleNewConnection(size_t index)
 void Server::handleClientData(size_t index)
 {
     char buffer[BUFFER_SIZE] = {0};
-    int received = recv(_fds[index].fd, buffer, sizeof(buffer)-1, 0);
-    if (received <= 0)
-    {
+    int received = recv(_fds[index].fd, buffer, sizeof(buffer) - 1, 0);
+    if (received <= 0) {
         close(_fds[index].fd);
         _fds.erase(_fds.begin() + index);
+        return;
     }
-    else
-    {
-        std::string rawRequest(buffer, received);
-        HttpRequestParser parser;
-        HttpRequest req = parser.parseRequest(rawRequest);
 
-        std::cout << "HTTP Request: " << req.method 
-                  << " " << req.uri << " " << req.httpVersion << "\n";
+    std::string rawRequest(buffer, received);
+    HttpRequestParser parser;
+    HttpRequest req = parser.parseRequest(rawRequest);
 
-        // TODO: match avec config.servers / locations
-        std::string response = "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\nHello";
+    const ServerConfig &serverConf = _config.servers[0];
+    HttpResponseBuilder builder(serverConf);
 
-        send(_fds[index].fd, response.c_str(), response.size(), 0);
-    }
+    std::string response = builder.buildResponse(req);
+    send(_fds[index].fd, response.c_str(), response.size(), 0);
 }
+
 
 void Server::run()
 {
