@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   configParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/11 08:52:23 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/09/12 16:42:51 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 ConfigParser::ConfigParser(const std::string &filePath) : _filePath(filePath)
 {
-    _fileContent = ftPutFileContent(_filePath);
+    _fileContent = ftReadFile(_filePath);
 }
 
 ConfigParser::ConfigParser(const ConfigParser& other)

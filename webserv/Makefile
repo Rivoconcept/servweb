@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+         #
+#    By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/08/28 14:08:13 by rhanitra          #+#    #+#              #
-#    Updated: 2025/09/12 11:37:19 by rivoinfo         ###   ########.fr        #
+#    Updated: 2025/09/12 17:53:39 by rhanitra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,7 +21,8 @@ DIR_UTILS = ./utils
 OBJ_DIR = ./obj
 INC_DIR = ./include
 
-WEBSERV = configParser.cpp requestParser.cpp server.cpp responseBuilder.cpp\
+WEBSERV = configParser.cpp requestParser.cpp server.cpp responseBuilder.cpp \
+		handleCGI.cpp \
           ../main.cpp
 
 SRC_WEBSERV = $(addprefix $(DIR_WEBSERV)/,$(WEBSERV))

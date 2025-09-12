@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 14:11:12 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/09/12 18:58:15 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,9 +101,25 @@ void Server::handleClientData(size_t index)
     HttpRequest req = parser.parseRequest(rawRequest);
 
     const ServerConfig &serverConf = _config.servers[0];
+    
+    const LocationConfig* locationConf = NULL;
+    for (size_t i = 0; i < serverConf.locations.size(); ++i)
+    {
+        const LocationConfig &loc = serverConf.locations[i];
+        if (req.uri.find(loc.path) == 0)  // URI commence par loc.path
+        {
+            locationConf = &loc;
+            break;
+        }
+    }
+    
+    // fallback si aucune location ne correspond
+    if (!locationConf && !serverConf.locations.empty())
+    locationConf = &serverConf.locations[0];
+    
     HttpResponseBuilder builder(serverConf);
 
-    std::string response = builder.buildResponse(req);
+    std::string response = builder.buildResponse(req, serverConf, *locationConf);
     send(_fds[index].fd, response.c_str(), response.size(), 0);
 }
 

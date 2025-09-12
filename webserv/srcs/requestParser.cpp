@@ -55,7 +55,6 @@ void HttpRequestParser::parseHeaders(const std::vector<std::string> &headerLines
         std::string key = headerLines[i].substr(0, colonPos);
         std::string value = headerLines[i].substr(colonPos + 1);
 
-        // trim spaces
         while (!value.empty() && (value[0] == ' ' || value[0] == '\t'))
             value.erase(0, 1);
 

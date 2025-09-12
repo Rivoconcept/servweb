@@ -1,38 +1,62 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   responseBuilder.cpp                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
+/*   Updated: 2025/09/12 19:02:03 by rhanitra         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "../include/httpResponse.hpp"
 
-// Constructeur
-HttpResponseBuilder::HttpResponseBuilder(const ServerConfig &conf) 
-    : _serverConf(conf) {}
+HttpResponseBuilder::HttpResponseBuilder(const ServerConfig &conf) : _serverConf(conf) {}
 
-// Lire un fichier (html, etc.)
-std::string HttpResponseBuilder::readFile(const std::string &path)
-{
-    std::ifstream file(path.c_str(), std::ios::in | std::ios::binary);
-    if (!file) {
-        throw std::runtime_error("Cannot open file: " + path);
-    }
-    std::ostringstream ss;
-    ss << file.rdbuf();
-    return ss.str();
-}
+HttpResponseBuilder::~HttpResponseBuilder() {}
 
-// Construire la réponse HTTP
-std::string HttpResponseBuilder::buildResponse(const HttpRequest &req)
+std::string HttpResponseBuilder::buildResponse(const HttpRequest &req, const ServerConfig &serverConf, const LocationConfig &locationConf)
 {
     std::string body;
-    try {
-        std::string filePath = _serverConf.root + req.uri;
-        body = readFile(filePath);
-    } catch (...) {
+    std::string statusLine = "HTTP/1.1 200 OK\r\n";
+    std::string headers;
+
+    try
+    {
+        if (req.uri.find(".php") != std::string::npos)
+        {
+            HandleCGI cgi(req, serverConf, locationConf);
+            cgi.buildEnv();
+            body = cgi.execute();   // à implémenter (fork/exec)
+        }
+        else
+        {
+            // fichier statique
+            std::string filePath = _serverConf.root + req.uri;
+
+            if (req.uri == "/") // si la requête est juste "/"
+            {
+                if (!_serverConf.indexFiles.empty())
+                    filePath = _serverConf.root + "/" + _serverConf.indexFiles[0];
+                else
+                    filePath = _serverConf.root + "/index.html";
+            }
+
+            body = ftReadFile(filePath);
+        }
+
+        headers = "Content-Length: " + ftToString(body.size()) + "\r\n";
+        headers += "Content-Type: text/html\r\n";
+    }
+    catch (...)
+    {
+        statusLine = "HTTP/1.1 404 Not Found\r\n";
         body = "<h1>404 Not Found</h1>";
+        headers = "Content-Length: " + ftToString(body.size()) + "\r\n";
+        headers += "Content-Type: text/html\r\n";
     }
 
-    std::ostringstream response;
-    response << "HTTP/1.1 200 OK\r\n";
-    response << "Content-Length: " << body.size() << "\r\n";
-    response << "Content-Type: text/html\r\n";
-    response << "\r\n";
-    response << body;
-
-    return response.str();
+    return statusLine + headers + "\r\n" + body;
 }
+

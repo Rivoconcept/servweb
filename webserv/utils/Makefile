@@ -6,11 +6,11 @@
 #    By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/22 08:39:35 by rhanitra          #+#    #+#              #
-#    Updated: 2025/09/08 20:01:41 by rhanitra         ###   ########.fr        #
+#    Updated: 2025/09/12 19:24:40 by rhanitra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-UTILS = ftToInt.cpp ftPutFileContent.cpp ftSplitStr.cpp
+UTILS = ftToInt.cpp ftReadFile.cpp ftSplitStr.cpp ftStrdup.cpp
 
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
