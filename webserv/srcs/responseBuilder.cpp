@@ -6,15 +6,29 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 19:02:03 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/15 19:40:27 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpResponse.hpp"
 
-HttpResponseBuilder::HttpResponseBuilder(const ServerConfig &conf) : _serverConf(conf) {}
+HttpResponseBuilder::HttpResponseBuilder(const ServerConfig &conf, const MimeTypes &types)
+        : _serverConf(conf), _mimeTypes(types) {}
 
 HttpResponseBuilder::~HttpResponseBuilder() {}
+
+std::string HttpResponseBuilder::getMimeType(const std::string &path)
+{
+    std::string::size_type dotPos = path.find_last_of('.');
+    if (dotPos == std::string::npos)
+        return ("application/octet-stream");
+
+    std::string ext = path.substr(dotPos + 1);
+    std::map<std::string, std::string>::const_iterator it = _mimeTypes.types.find(ext);
+    if (it != _mimeTypes.types.end())
+        return (it->second);
+    return ("application/octet-stream");
+}
 
 std::string HttpResponseBuilder::buildResponse(const HttpRequest &req, const ServerConfig &serverConf, const LocationConfig &locationConf)
 {
@@ -24,30 +38,31 @@ std::string HttpResponseBuilder::buildResponse(const HttpRequest &req, const Ser
 
     try
     {
-        if (req.uri.find(".php") != std::string::npos)
+        if (req.uri.find(locationConf.cgiExtension) != std::string::npos && !locationConf.cgiPath.empty())
         {
             HandleCGI cgi(req, serverConf, locationConf);
             cgi.buildEnv();
-            body = cgi.execute();   // à implémenter (fork/exec)
+            body = cgi.execute();
         }
         else
         {
-            // fichier statique
-            std::string filePath = _serverConf.root + req.uri;
+            std::string filePath = serverConf.root + req.uri;
 
-            if (req.uri == "/") // si la requête est juste "/"
+            if (req.uri == "/")
             {
-                if (!_serverConf.indexFiles.empty())
-                    filePath = _serverConf.root + "/" + _serverConf.indexFiles[0];
+                if (!serverConf.indexFiles.empty())
+                    filePath = serverConf.root + "/" + serverConf.indexFiles[0];
                 else
-                    filePath = _serverConf.root + "/index.html";
+                    filePath = serverConf.root + "/index.html";
             }
 
             body = ftReadFile(filePath);
+
+            std::string contentType = getMimeType(filePath);
+            headers += "Content-Type: " + contentType + "\r\n";
         }
 
-        headers = "Content-Length: " + ftToString(body.size()) + "\r\n";
-        headers += "Content-Type: text/html\r\n";
+        headers += "Content-Length: " + ftToString(body.size()) + "\r\n";
     }
     catch (...)
     {
@@ -59,4 +74,3 @@ std::string HttpResponseBuilder::buildResponse(const HttpRequest &req, const Ser
 
     return statusLine + headers + "\r\n" + body;
 }
-

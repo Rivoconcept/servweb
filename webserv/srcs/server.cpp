@@ -6,14 +6,14 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 18:58:15 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/15 19:42:38 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpServer.hpp"
 #include "../include/httpResponse.hpp"
 
-Server::Server(const HttpConfig &config) : _config(config)
+Server::Server(const HttpConfig &config, MimeTypes &types) : _config(config), _mimeTypes(types)
 {
     setupListeningSockets();
 }
@@ -117,7 +117,7 @@ void Server::handleClientData(size_t index)
     if (!locationConf && !serverConf.locations.empty())
     locationConf = &serverConf.locations[0];
     
-    HttpResponseBuilder builder(serverConf);
+    HttpResponseBuilder builder(serverConf, _mimeTypes);
 
     std::string response = builder.buildResponse(req, serverConf, *locationConf);
     send(_fds[index].fd, response.c_str(), response.size(), 0);

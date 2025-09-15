@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:36 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 18:14:52 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/15 19:33:16 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,14 @@ class HttpResponseBuilder
 {
     private:
         const ServerConfig &_serverConf;
+        const MimeTypes &_mimeTypes;
 
     public:
-        HttpResponseBuilder(const ServerConfig &conf);
+        HttpResponseBuilder(const ServerConfig &conf, const MimeTypes &types);
         ~HttpResponseBuilder();
 
+
+        std::string getMimeType(const std::string &path);
         std::string buildResponse(const HttpRequest &req, const ServerConfig &serverConf, const LocationConfig &locationConf);
 };
 

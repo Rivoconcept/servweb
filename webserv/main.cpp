@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:40:36 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/11 17:42:23 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/15 19:30:37 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,22 +16,28 @@
 
 int main(int argc, char **argv)
 {
-    std::string file;
+    std::string configPath;
+    std::string mimeTypesPath = "./conf.d/mime.type";
 
     if (argc == 2 && argv[1][0])
-        file = argv[1];  
+        configPath = argv[1];  
     else if (argc == 1)
-        file = "./conf.d/webserv.conf";
+        configPath = "./conf.d/webserv.conf";
     else {
         std::cerr << "Use: " << argv[0] << " [config_file]" << std::endl;
         return EXIT_FAILURE;
     }
     
-    try {
-        ConfigParser parser(file);
+    try
+    {
+        ConfigParser parser(configPath, mimeTypesPath);
+
         HttpConfig config = parser.parse();
 
-        Server server(config);
+        MimeTypes types;
+        parser.loadMimeTypes(types);
+
+        Server server(config, types);
         server.run();
     }
     catch (const std::exception& e) {

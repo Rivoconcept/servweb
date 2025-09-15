@@ -6,15 +6,16 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 16:42:51 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/15 19:30:07 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpConfig.hpp"
 
-ConfigParser::ConfigParser(const std::string &filePath) : _filePath(filePath)
+ConfigParser::ConfigParser(const std::string &configFilePathPath, const std::string &mimeTypesPath) 
+    : _configFilePath(configFilePathPath), _mimeTypesPath(mimeTypesPath)
 {
-    _fileContent = ftReadFile(_filePath);
+    _fileContent = ftReadFile(_configFilePath);
 }
 
 ConfigParser::ConfigParser(const ConfigParser& other)
@@ -26,13 +27,39 @@ ConfigParser& ConfigParser::operator=(const ConfigParser& other)
 {
     if (this != &other)
     {
-        _filePath = other._filePath;
+        _configFilePath = other._configFilePath;
         _fileContent = other._fileContent;
     }
     return (*this);
 }
 
 ConfigParser::~ConfigParser() {}
+
+void ConfigParser::loadMimeTypes(MimeTypes &mimeTypes)
+{
+    std::ifstream ifs(_mimeTypesPath.c_str());
+    if (!ifs)
+        throw std::runtime_error("cannot open mime.types");
+
+    std::string line;
+    while (std::getline(ifs, line))
+    {
+        if (line.empty() || line[0] == '#') continue;
+        if (line.find("{") != std::string::npos || line.find("}") != std::string::npos) continue;
+
+        std::istringstream iss(line);
+        std::string mime;
+        iss >> mime;
+        std::string ext;
+        while (iss >> ext)
+        {
+            if (!ext.empty() && ext[ext.size() - 1] == ';')
+                ext.erase(ext.size() - 1);
+            mimeTypes.types[ext] = mime;
+        }
+    }
+}
+
 
 void ConfigParser::expectToken(std::istream &input, const std::string &expected)
 {
