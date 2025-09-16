@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   configParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/15 19:30:07 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/16 16:20:31 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,9 +81,11 @@ void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
         std::string value;
         std::getline(input, value, ';');
 
+        // trim des espaces/tabs
         size_t start = value.find_first_not_of(" \t");
         size_t end   = value.find_last_not_of(" \t");
-        if (start != std::string::npos) value = value.substr(start, end - start + 1);
+        if (start != std::string::npos)
+            value = value.substr(start, end - start + 1);
 
         if (token == "methods")
         {
@@ -92,15 +94,19 @@ void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
             while (ss >> method) loc.methods.push_back(method);
         }
         else if (token == "autoindex")
+        {
             loc.autoindex = (value == "on");
+        }
         else if (token == "index")
         {
             std::stringstream ss(value);
             std::string file;
             while (ss >> file) loc.indexFiles.push_back(file);
         }
-        else if (token == "root") loc.root = value;
-        else if (token == "upload_dir") loc.uploadDir = value;
+        else if (token == "root")
+            loc.root = value;
+        else if (token == "upload_dir")
+            loc.uploadDir = value;
         else if (token == "return")
         {
             std::stringstream ss(value);
@@ -112,12 +118,18 @@ void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
             loc.returnCode = 301;
             loc.returnPath = value;
         }
-        else if (token == "default_file") loc.defaultFile = value;
-        else if (token == "cgi_extension") loc.cgiExtension = value;
-        else if (token == "cgi_path") loc.cgiPath = value;
-        else loc.directives[token] = value;
+        else if (token == "default_file")
+            loc.defaultFile = value;
+        else if (token == "cgi_extension")
+            loc.cgiExtension = value; // simple assignation, pas besoin de relire
+        else if (token == "cgi_path")
+            loc.cgiPath = value;       // idem
+        else
+            loc.directives[token] = value;
     }
 }
+
+
 
 void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
 {

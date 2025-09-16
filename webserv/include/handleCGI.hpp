@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleCGI.hpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:47:11 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 19:49:51 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/16 14:15:02 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,7 @@ class HandleCGI
         HandleCGI(const HttpRequest &req, const ServerConfig &serverConf, const LocationConfig &_locationConf);
         ~HandleCGI();
 
+        void printEnv() const;
         void buildEnv();
         std::vector<char*> buildEnvArray() const;
         std::string execute();

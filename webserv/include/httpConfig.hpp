@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpConfig.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 13:30:58 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/15 19:29:09 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/16 16:19:42 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,6 @@ struct HttpConfig
     std::vector<ServerConfig> servers;
 };
 
-
 class ConfigParser
 {
     private:
@@ -80,7 +79,7 @@ class ConfigParser
         void parseLocationBlock(std::istream &input, LocationConfig &loc);
 
     public:
-        ConfigParser(const std::string &_configFilePath, const std::string &_mimeTypesPath);
+        ConfigParser(const std::string &_configFilePath, const std::string &mimeTypesPath);
         ConfigParser(const ConfigParser& other);
         ConfigParser& operator=(const ConfigParser& other);
         ~ConfigParser();
