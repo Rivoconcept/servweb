@@ -3,15 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 13:50:20 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/09/16 19:24:35 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpServer.hpp"
 #include "../include/httpResponse.hpp"
+
 
 Server::Server(const HttpConfig &config, MimeTypes &types) : _config(config), _mimeTypes(types)
 {
@@ -64,8 +65,11 @@ void Server::setupListeningSockets()
         pfd.events = POLLIN;
         _fds.push_back(pfd);
 
+        // 👇 Ici : association socket d'écoute ↔ config serveur
+        _listenSockets[sock] = &_config.servers[i];
+
         std::cout << "Listening on " << _config.servers[i].host 
-                  << ":" << _config.servers[i].listenPort << std::endl;
+                << ":" << _config.servers[i].listenPort << std::endl;
     }
 }
 
@@ -82,16 +86,29 @@ void Server::handleNewConnection(size_t index)
         _fds.push_back(client_pfd);
         _clientSockets.push_back(client_sock);
 
-        std::cout << "New client: " << client_sock << std::endl;
+        // Vérifie que le fd d’écoute est bien dans la map
+        if (_listenSockets.count(_fds[index].fd)) {
+            _clientToServer[client_sock] = _listenSockets[_fds[index].fd];
+            std::cout << "New client " << client_sock 
+                      << " attached to server listening on port "
+                      << _listenSockets[_fds[index].fd]->listenPort << std::endl;
+        } else {
+            std::cerr << "Error: listening socket " << _fds[index].fd 
+                      << " not found in _listenSockets!" << std::endl;
+        }
     }
 }
+
 
 void Server::handleClientData(size_t index)
 {
     char buffer[BUFFER_SIZE] = {0};
-    int received = recv(_fds[index].fd, buffer, sizeof(buffer) - 1, 0);
+    int client_fd = _fds[index].fd;
+
+    int received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
     if (received <= 0) {
-        close(_fds[index].fd);
+        close(client_fd);
+        _clientToServer.erase(client_fd);
         _fds.erase(_fds.begin() + index);
         return;
     }
@@ -100,28 +117,42 @@ void Server::handleClientData(size_t index)
     HttpRequestParser parser;
     HttpRequest req = parser.parseRequest(rawRequest);
 
-    const ServerConfig &serverConf = _config.servers[0];
-    
+    // Récupérer la config du serveur associé à ce client
+    ServerConfig *serverConf = _clientToServer[client_fd];
+    if (!serverConf) {
+        std::cerr << "Error: no server config found for client " << client_fd << "\n";
+        return;
+    }
+
+    // Trouver la location correspondante
     const LocationConfig* locationConf = NULL;
-    for (size_t i = 0; i < serverConf.locations.size(); ++i)
+    size_t bestMatchLen = 0;
+
+    for (size_t i = 0; i < serverConf->locations.size(); ++i)
     {
-        const LocationConfig &loc = serverConf.locations[i];
-        if (req.uri.find(loc.path) == 0)  // URI commence par loc.path
+        const LocationConfig &loc = serverConf->locations[i];
+        if (req.uri.find(loc.path) == 0) // préfixe trouvé
         {
-            locationConf = &loc;
-            break;
+            if (loc.path.size() > bestMatchLen) {
+                locationConf = &loc;
+                bestMatchLen = loc.path.size();
+            }
         }
     }
-    
-    // fallback si aucune location ne correspond
-    if (!locationConf && !serverConf.locations.empty())
-    locationConf = &serverConf.locations[0];
-    
-    HttpResponseBuilder builder(serverConf, _mimeTypes);
 
-    std::string response = builder.buildResponse(req, serverConf, *locationConf);
-    send(_fds[index].fd, response.c_str(), response.size(), 0);
+    if (!locationConf && !serverConf->locations.empty())
+        locationConf = &serverConf->locations[0];
+
+    std::cout << "DEBUG: selected location " 
+            << locationConf->path 
+            << " (cgiExtension=" << locationConf->cgiExtension 
+            << ", cgiPath=" << locationConf->cgiPath << ")" << std::endl;
+
+    HttpResponseBuilder builder(_mimeTypes);
+    std::string response = builder.buildResponse(req, *serverConf, *locationConf);
+    send(client_fd, response.c_str(), response.size(), 0);
 }
+
 
 
 void Server::run()
@@ -139,17 +170,17 @@ void Server::run()
         {
             if (_fds[i].revents & POLLIN)
             {
-                if (i < _config.servers.size())
-                {
+                if (_listenSockets.count(_fds[i].fd)) {
                     // C’est un socket d’écoute
                     handleNewConnection(i);
                 }
-                else
-                {
+                else {
                     // C’est un client
                     handleClientData(i);
                 }
             }
         }
+
     }
 }
+

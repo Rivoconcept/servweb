@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleCGI.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:48:25 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 14:14:46 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/09/16 19:32:11 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,8 @@ void HandleCGI::buildEnv()
     _env["GATEWAY_INTERFACE"] = "CGI/1.1";
     _env["SERVER_PROTOCOL"] = _request.httpVersion;
     _env["REMOTE_ADDR"] = _request.host;
+    _env["REDIRECT_STATUS"] = "200";
+
 }
 
 std::vector<char*> HandleCGI::buildEnvArray() const
