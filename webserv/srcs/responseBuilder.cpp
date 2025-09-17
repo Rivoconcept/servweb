@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 18:26:38 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/17 19:03:29 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,25 +41,13 @@ std::string HttpResponseBuilder::buildResponse(
 
     try
     {
-        std::cout << "DEBUG: req.uri = [" << req.uri << "]" << std::endl;
-        std::cout << "DEBUG: cgiExtension = [" << locationConf.cgiExtension << "]"
-                  << ", cgiPath = [" << locationConf.cgiPath << "]" << std::endl;
-
         // 🔹 Vérifier si la requête correspond à un CGI
-        if (!locationConf.cgiExtension.empty() &&
-            req.uri.size() >= locationConf.cgiExtension.size() &&
-            req.uri.compare(req.uri.size() - locationConf.cgiExtension.size(),
-                            locationConf.cgiExtension.size(),
-                            locationConf.cgiExtension) == 0 &&
-            !locationConf.cgiPath.empty())
+        if (!locationConf.cgiExtension.empty() && req.uri.size() >= locationConf.cgiExtension.size() &&
+            req.uri.compare(req.uri.size() - locationConf.cgiExtension.size(), locationConf.cgiExtension.size(),
+            locationConf.cgiExtension) == 0 && !locationConf.cgiPath.empty())
         {
-            std::cout << "DEBUG before CGI: location path = " << locationConf.path
-                      << ", cgiExtension = [" << locationConf.cgiExtension << "]"
-                      << ", cgiPath = [" << locationConf.cgiPath << "]" << std::endl;
-
             HandleCGI cgi(req, serverConf, locationConf);
             cgi.buildEnv();
-            cgi.printEnv();
             std::string cgiOutput = cgi.execute();
 
             // Séparer headers et body envoyés par le CGI

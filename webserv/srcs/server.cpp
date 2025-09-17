@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 19:24:35 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/17 19:02:19 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -142,11 +142,6 @@ void Server::handleClientData(size_t index)
 
     if (!locationConf && !serverConf->locations.empty())
         locationConf = &serverConf->locations[0];
-
-    std::cout << "DEBUG: selected location " 
-            << locationConf->path 
-            << " (cgiExtension=" << locationConf->cgiExtension 
-            << ", cgiPath=" << locationConf->cgiPath << ")" << std::endl;
 
     HttpResponseBuilder builder(_mimeTypes);
     std::string response = builder.buildResponse(req, *serverConf, *locationConf);
