@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/17 19:02:19 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/20 14:01:03 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,8 +147,6 @@ void Server::handleClientData(size_t index)
     std::string response = builder.buildResponse(req, *serverConf, *locationConf);
     send(client_fd, response.c_str(), response.size(), 0);
 }
-
-
 
 void Server::run()
 {
