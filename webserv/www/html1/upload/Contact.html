@@ -7,14 +7,15 @@
 </head>
 <body>
     <div class="form">
-        <form action="">
+        <!-- action = endpoint du serveur, method=POST -->
+        <form action="/uploads" method="POST" enctype="multipart/form-data">
             <fieldset>
                 <legend>Etat Civil</legend>
                 <div class="sex">
                     <label>Sex</label>
-                    <input type="radio" name="sex" id="man">
+                    <input type="radio" name="sex" id="man" value="man">
                     <label for="man">Man</label>
-                    <input type="radio" name="sex" id="woman">
+                    <input type="radio" name="sex" id="woman" value="woman">
                     <label for="woman">Woman</label>
                 </div>
                 <div class="firstName">
@@ -38,6 +39,7 @@
                     </select>
                 </div>
             </fieldset>
+
             <fieldset>
                 <legend>Contact</legend>
                 <div class="Telephone">
@@ -49,6 +51,7 @@
                     <input type="email" name="email" id="inputEmail" required>
                 </div>
             </fieldset>
+
             <fieldset>
                 <legend>Attachment</legend>
                 <div class="cv">
@@ -56,6 +59,7 @@
                     <input type="file" name="cv" id="inputCv">
                 </div>
             </fieldset>
+
             <fieldset>
                 <legend>Contract</legend>
                 <div class="contract">
@@ -63,14 +67,16 @@
                     <label for="inputContract">I accept the terms of use</label>
                 </div>
             </fieldset>
+
             <fieldset>
                 <legend>Additional information (optional)</legend>
                 <div class="info">
                     <textarea name="information" id="inputInfo" cols="50" rows="10" placeholder="Your message"></textarea>
                 </div>
             </fieldset>
+
             <div class="Validation">
-                <button>Post infromation</button>
+                <button type="submit">Post information</button>
                 <button type="reset">Cancel</button>
             </div>    
         </form>

@@ -22,7 +22,7 @@ OBJ_DIR = ./obj
 INC_DIR = ./include
 
 WEBSERV = configParser.cpp requestParser.cpp server.cpp responseBuilder.cpp \
-		handleCGI.cpp \
+		handleCGI.cpp handleErrors.cpp \
           ../main.cpp
 
 SRC_WEBSERV = $(addprefix $(DIR_WEBSERV)/,$(WEBSERV))

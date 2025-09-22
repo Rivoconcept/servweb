@@ -15,6 +15,7 @@
 
 #include "httpConfig.hpp"
 #include "httpRequest.hpp"
+#include "handleErrors.hpp"
 #include "utils.hpp"
 
 #include <iostream>
@@ -24,6 +25,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include <vector>
+#include <set>
 #include <map>
 #include <string>
 

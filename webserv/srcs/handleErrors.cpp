@@ -50,46 +50,42 @@ std::string HandleErrors::getErrorBodyFromFile(
     return buffer.str();
 }
 
-std::string HandleErrors::generateErrorResponse(int code, const ServerConfig &serverConf,
-    const LocationConfig *locationConf, const std::string &extraHeaders)
+std::string HandleErrors::generateErrorResponse(
+    int code,
+    const ServerConfig& serverConf,
+    const LocationConfig* locationConf,
+    const std::string& extraHeaders)
 {
-    std::string reason = getDefaultReason(code);
+    (void)locationConf; // éviter warning unused parameter
 
-    // Chercher d’abord si la location définit une page d’erreur
-    std::map<int, std::string>::const_iterator it;
-    if (locationConf) {
-        it = locationConf->errorPages.find(code);
-        if (it != locationConf->errorPages.end()) {
-            std::string filePath = locationConf->root + it->second;
-            std::string body = getErrorBodyFromFile(filePath, code, reason);
-            std::ostringstream oss;
-            oss << "HTTP/1.1 " << code << " " << reason << "\r\n";
-            oss << "Content-Type: text/html\r\n";
-            if (!extraHeaders.empty())
-                oss << extraHeaders;
-            oss << "Content-Length: " << body.size() << "\r\n\r\n";
-            oss << body;
-            return oss.str();
+    // Initialiser les messages par défaut
+    static std::map<int, std::string> reasons = initReasonMap();
+    std::string reason = "Unknown Error";
+    if (reasons.find(code) != reasons.end())
+        reason = reasons[code];
+
+    // Chercher error_page dans ServerConfig
+    std::map<int,std::string>::const_iterator it = serverConf.errorPages.find(code);
+    std::string body;
+    if (it != serverConf.errorPages.end()) {
+        std::ifstream file(it->second.c_str());
+        if (file) {
+            std::ostringstream ss;
+            ss << file.rdbuf();
+            body = ss.str();
         }
     }
 
-    // Sinon → chercher côté server
-    it = serverConf.errorPages.find(code);
-    if (it != serverConf.errorPages.end()) {
-        std::string filePath = serverConf.root + it->second;
-        std::string body = getErrorBodyFromFile(filePath, code, reason);
-        std::ostringstream oss;
-        oss << "HTTP/1.1 " << code << " " << reason << "\r\n";
-        oss << "Content-Type: text/html\r\n";
-        if (!extraHeaders.empty())
-            oss << extraHeaders;
-        oss << "Content-Length: " << body.size() << "\r\n\r\n";
-        oss << body;
-        return oss.str();
+    // fallback si aucun fichier ou erreur non trouvée
+    if (body.empty()) {
+        std::ostringstream ss;
+        ss << "<html><head><title>" << code << " " << reason 
+           << "</title></head><body><h1>" << code << " " << reason
+           << "</h1></body></html>";
+        body = ss.str();
     }
 
-    // Sinon → fallback générique
-    std::string body = getErrorBodyFromFile("", code, reason);
+    // Construire réponse HTTP
     std::ostringstream oss;
     oss << "HTTP/1.1 " << code << " " << reason << "\r\n";
     oss << "Content-Type: text/html\r\n";
@@ -97,7 +93,7 @@ std::string HandleErrors::generateErrorResponse(int code, const ServerConfig &se
         oss << extraHeaders;
     oss << "Content-Length: " << body.size() << "\r\n\r\n";
     oss << body;
+
     return oss.str();
 }
-
 

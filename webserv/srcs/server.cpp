@@ -99,7 +99,6 @@ void Server::handleNewConnection(size_t index)
     }
 }
 
-
 void Server::handleClientData(size_t index)
 {
     char buffer[BUFFER_SIZE] = {0};
@@ -115,36 +114,67 @@ void Server::handleClientData(size_t index)
 
     std::string rawRequest(buffer, received);
     HttpRequestParser parser;
-    HttpRequest req = parser.parseRequest(rawRequest);
+    HttpRequest req;
 
-    // Récupérer la config du serveur associé à ce client
-    ServerConfig *serverConf = _clientToServer[client_fd];
-    if (!serverConf) {
-        std::cerr << "Error: no server config found for client " << client_fd << "\n";
+    try {
+        req = parser.parseRequest(rawRequest);
+    } catch (std::exception &e) {
+        // 🔹 Requête malformée → 400 Bad Request
+        std::string response = HandleErrors::generateErrorResponse(
+            400, *_clientToServer[client_fd], NULL
+        );
+        send(client_fd, response.c_str(), response.size(), 0);
         return;
     }
 
-    // Trouver la location correspondante
+    // 🔹 Récupérer la config du serveur associé
+    ServerConfig *serverConf = _clientToServer[client_fd];
+    if (!serverConf) {
+        std::cerr << "Error: no server config found for client " << client_fd << "\n";
+        std::string response = HandleErrors::generateErrorResponse(500, *serverConf);
+        send(client_fd, response.c_str(), response.size(), 0);
+        return;
+    }
+
+    // 🔹 Trouver la meilleure location
     const LocationConfig* locationConf = NULL;
     size_t bestMatchLen = 0;
-
     for (size_t i = 0; i < serverConf->locations.size(); ++i)
     {
         const LocationConfig &loc = serverConf->locations[i];
-        if (req.uri.find(loc.path) == 0) // préfixe trouvé
-        {
+        if (req.uri.find(loc.path) == 0) { // préfixe trouvé
             if (loc.path.size() > bestMatchLen) {
                 locationConf = &loc;
                 bestMatchLen = loc.path.size();
             }
         }
     }
-
     if (!locationConf && !serverConf->locations.empty())
         locationConf = &serverConf->locations[0];
 
+    // 🔹 Vérifier méthode autorisée
+    if (locationConf) {
+        std::set<std::string> allowed(locationConf->methods.begin(),
+                                      locationConf->methods.end());
+        if (allowed.find(req.method) == allowed.end()) {
+            std::string response = HandleErrors::generateErrorResponse(
+                405, *serverConf, locationConf, "Allow: GET, POST, DELETE\r\n"
+            );
+            send(client_fd, response.c_str(), response.size(), 0);
+            return;
+        }
+    }
+
+    // 🔹 Construire réponse HTTP
     HttpResponseBuilder builder(_mimeTypes);
-    std::string response = builder.buildResponse(req, *serverConf, *locationConf);
+    std::string response;
+    try {
+        response = builder.buildResponse(req, *serverConf, *locationConf);
+    } catch (std::exception &e) {
+        // 🔹 Erreur interne → 500 Internal Server Error
+        response = HandleErrors::generateErrorResponse(500, *serverConf, locationConf);
+    }
+
     send(client_fd, response.c_str(), response.size(), 0);
 }
 
