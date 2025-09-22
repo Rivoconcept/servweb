@@ -6,14 +6,11 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:48:25 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/17 19:08:42 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/22 19:28:23 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "handleCGI.hpp"
-
-#include <sstream>
-#include <cstdlib>
+#include "../include/handleCGI.hpp"
 
 HandleCGI::HandleCGI(const HttpRequest& req, const ServerConfig& serverConf, const LocationConfig& locationConf)
     : _request(req), _serverConf(serverConf), _locationConf(locationConf) {}
