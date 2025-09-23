@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Contact Form</title>
+    <link rel="stylesheet" href="scss/style.css" type="text/css" />
+</head>
+<body>
+    <div class="form">
+        <form action="">
+            <fieldset>
+                <legend>Etat Civil</legend>
+                <div class="sex">
+                    <label>Sex</label>
+                    <input type="radio" name="sex" id="man">
+                    <label for="man">Man</label>
+                    <input type="radio" name="sex" id="woman">
+                    <label for="woman">Woman</label>
+                </div>
+                <div class="firstName">
+                    <label for="inputFirstName">First Name</label>
+                    <input type="text" name="FirstName" id="inputFirstName">
+                </div>
+                <div class="name">
+                    <label for="inputName">Name</label>
+                    <input type="text" name="Name" id="inputName">
+                </div>
+                <div class="birthDay">
+                    <label for="inputBirthDay">BirthDay</label>
+                    <input type="date" name="BirthDay" id="inputBirthDay">
+                </div>
+                <div class="status">
+                    <label for="inputStatus">Family Status</label>
+                    <select name="status" id="inputStatus">
+                        <option value="s">Single</option>
+                        <option value="m">Married</option>
+                        <option value="d">Divorced</option>
+                    </select>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Contact</legend>
+                <div class="Telephone">
+                    <label for="inputPhone">Phone Number</label>
+                    <input type="number" name="phone" id="inputPhone">
+                </div>
+                <div class="email">
+                    <label for="inputEmail">Email</label>
+                    <input type="email" name="email" id="inputEmail" required>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Attachment</legend>
+                <div class="cv">
+                    <label for="inputCv">Browse CV here</label>
+                    <input type="file" name="cv" id="inputCv">
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Contract</legend>
+                <div class="contract">
+                    <input type="checkbox" name="contract" id="inputContract" checked>
+                    <label for="inputContract">I accept the terms of use</label>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Additional information (optional)</legend>
+                <div class="info">
+                    <textarea name="information" id="inputInfo" cols="50" rows="10" placeholder="Your message"></textarea>
+                </div>
+            </fieldset>
+            <div class="Validation">
+                <button>Post infromation</button>
+                <button type="reset">Cancel</button>
+            </div>    
+        </form>
+    </div>
+</body>
+</html>
