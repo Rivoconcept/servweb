@@ -1,35 +1,136 @@
 $PrimaryFontColor: white;
 
 body {
-    font-family: "Inter", sans-serif;
-    background: black;
+  font-family: "Inter", sans-serif;
+  background: black;
+  color: $PrimaryFontColor;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.form {
+  width: 90%;
+  max-width: 500px;
+  background: #111;
+  border: 1px solid $PrimaryFontColor;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+  
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  fieldset {
+    border: 1px solid $PrimaryFontColor;
+    border-radius: 5px;
+    padding: 5px;
+  }
+
+  legend {
+    padding: 0 10px;
+    font-weight: bold;
+  }
+
+  label {
+    margin-bottom: 5px;
     color: $PrimaryFontColor;
-}
-
-@mixin button-base() {
-  @include typography(button);
-  @include ripple-surface;
-  @include ripple-radius-bounded;
-
-  display: inline-flex;
-  position: relative;
-  height: $button-height;
-  border: none;
-  vertical-align: middle;
-
-  &:hover {
-    cursor: pointer;
+    font-size: 0.9rem;
   }
 
-  &:disabled {
-    color: $mdc-button-disabled-ink-color;
-    cursor: default;
-    pointer-events: none;
-  }
-}
+  input[type="number"],
+  input[type="date"],
+  select {
+    padding: 8px 10px;
+    border: 1px solid $PrimaryFontColor;
+    border-radius: 4px;
+    background: transparent;
+    color: $PrimaryFontColor;
+    font-size: 1rem;
+    box-sizing: border-box;
 
-button {
-    size: 100px;
-    @include button-base();
+    &:focus {
+      outline: none;
+      border-color: lighten($PrimaryFontColor, 30%);
+      background: #222;
+    }
+  }
+
+  input[type="text"],
+  input[type="email"] {
+    padding: 8px 10px;
+    width: 80%;
+    border: 1px solid $PrimaryFontColor;
+    border-radius: 4px;
+    background: transparent;
+    color: $PrimaryFontColor;
+    font-size: 1rem;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: lighten($PrimaryFontColor, 30%);
+      background: #222;
+    }
+  }
+
+  textarea {
+    width: 100%;
+    height: 100px;
+    padding: 8px 10px;
+    border: 1px solid $PrimaryFontColor;
+    border-radius: 4px;
+    background: transparent;
+    color: $PrimaryFontColor;
+    font-size: 1rem;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: lighten($PrimaryFontColor, 30%);
+      background: #222;
+    }
+  }
+
+  input[type="radio"],
+  input[type="checkbox"] {
+    margin-right: 5px;
+  }
+
+  .sex, .firstName, .name, .birthDay, .status,
+  .Telephone, .email, .cv, .contract, .info {
+    margin-bottom: 5px;
+  }
+
+  .contract {
+    display: inline;
+  }
+
+  .Validation {
+    display: flex;
+    justify-content: space-between;
+
+    button {
+      background: transparent;
+      border: 1px solid $PrimaryFontColor;
+      color: $PrimaryFontColor;
+      padding: 8px 15px;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.3s, color 0.3s;
+
+      &:hover {
+        background: $PrimaryFontColor;
+        color: black;
+      }
+    }
+  }
 }
 
