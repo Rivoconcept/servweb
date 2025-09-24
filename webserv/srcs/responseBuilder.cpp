@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/17 19:03:29 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/09/24 16:36:57 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,15 +65,30 @@ std::string HttpResponseBuilder::buildResponse(
         }
         else
         {
-            // 🔹 Fichier statique
-            std::string filePath = serverConf.root + req.uri;
+            // 🔹 Fichier statique : gérer root location + index
+            std::string root = locationConf.root.empty() ? serverConf.root : locationConf.root;
 
-            if (req.uri == "/") {
-                if (!serverConf.indexFiles.empty())
-                    filePath = serverConf.root + "/" + serverConf.indexFiles[0];
-                else
-                    filePath = serverConf.root + "/index.html";
+            // Supprimer le préfixe location de l'URI
+            std::string relativePath;
+
+            if (!locationConf.root.empty()) {
+                // Si root est déjà le dossier exact de bootstrap, ne pas enlever /bootstrap/
+                relativePath = req.uri.substr(1); // enlever juste le /
+            } else {
+                relativePath = req.uri.substr(locationConf.path.size());
             }
+
+            // Si la requête pointe vers la racine de la location
+            if (relativePath.empty() || relativePath == "/") {
+                if (!locationConf.indexFiles.empty())
+                    relativePath = locationConf.indexFiles[0];
+                else if (!serverConf.indexFiles.empty())
+                    relativePath = serverConf.indexFiles[0];
+                else
+                    relativePath = "index.html";
+            }
+
+            std::string filePath = root + "/" + relativePath;
 
             body = ftReadFile(filePath);
             std::string contentType = getMimeType(filePath);
@@ -91,4 +106,5 @@ std::string HttpResponseBuilder::buildResponse(
 
     return statusLine + headers + "\r\n\r\n" + body;
 }
+
 
