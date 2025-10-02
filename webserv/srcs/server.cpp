@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/24 16:19:16 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/10/02 15:52:16 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,79 @@ void Server::handleNewConnection(size_t index)
     }
 }
 
+bool Server::handleMultipart(const HttpRequest &req, const std::string &rawRequest,
+                             int client_fd, ServerConfig *serverConf, const LocationConfig *locationConf)
+{
+    std::string contentType;
+    if (req.headers.find("Content-Type") != req.headers.end())
+        contentType = req.headers.at("Content-Type");
+
+    if (contentType.find("multipart/form-data") == std::string::npos)
+        return false; // ❌ Pas un upload multipart → on laisse le handler normal continuer
+
+    // ✅ 1) Boundary
+    size_t pos = contentType.find("boundary=");
+    if (pos == std::string::npos) {
+        std::string response = HandleErrors::generateErrorResponse(
+            400, *serverConf, locationConf
+        );
+        send(client_fd, response.c_str(), response.size(), 0);
+        return true; // ✅ On a traité (erreur)
+    }
+    std::string boundary = contentType.substr(pos + 9);
+
+    // ✅ 2) Body brut
+    size_t bodyPos = rawRequest.find("\r\n\r\n");
+    if (bodyPos == std::string::npos) {
+        std::string response = HandleErrors::generateErrorResponse(
+            400, *serverConf, locationConf
+        );
+        send(client_fd, response.c_str(), response.size(), 0);
+        return true;
+    }
+    std::string body = rawRequest.substr(bodyPos + 4);
+    std::string delimiter = "--" + boundary;
+
+    // ✅ 3) Split en parties
+    std::vector<std::string> parts = splitParts(body, delimiter);
+
+    // ✅ 4) Dossier d’upload
+    std::string uploadDir;
+    if (locationConf && !locationConf->root.empty())
+        uploadDir = locationConf->root;
+    else
+        uploadDir = serverConf->root;
+
+    // ✅ 5) Parcourir chaque part
+    for (size_t i = 0; i < parts.size(); ++i)
+    {
+        std::string filename = extractFilename(parts[i]);  
+        std::string fieldData = extractFileContent(parts[i]); 
+
+        if (!filename.empty()) {
+            std::string fullpath = uploadDir + "/" + filename;
+            std::ofstream file(fullpath.c_str(), std::ios::binary);
+            if (!file.is_open()) {
+                std::cerr << "Erreur : impossible d’écrire dans " << fullpath << std::endl;
+            } else {
+                file.write(fieldData.c_str(), fieldData.size());
+                file.close();
+            }
+        }
+
+    }
+
+    // ✅ 6) Réponse HTTP
+    std::string response =
+        "HTTP/1.1 201 Created\r\n"
+        "Content-Length: 0\r\n"
+        "Connection: close\r\n\r\n";
+
+    send(client_fd, response.c_str(), response.size(), 0);
+    return true; // ✅ Upload traité ici
+}
+
+
 void Server::handleClientData(size_t index)
 {
     char buffer[BUFFER_SIZE] = {0};
@@ -118,7 +191,9 @@ void Server::handleClientData(size_t index)
 
     try {
         req = parser.parseRequest(rawRequest);
-    } catch (std::exception &e) {
+    } 
+    catch (std::exception &e)
+    {
         // 🔹 Requête malformée → 400 Bad Request
         std::string response = HandleErrors::generateErrorResponse(
             400, *_clientToServer[client_fd], NULL
@@ -164,6 +239,12 @@ void Server::handleClientData(size_t index)
         );
         send(client_fd, response.c_str(), response.size(), 0);
         return;
+    }
+
+    if (req.method == "POST") {
+        bool handled = handleMultipart(req, rawRequest, client_fd, serverConf, locationConf);
+        if (handled)
+            return; // ✅ Ne pas continuer le flow normal
     }
 
     // 🔹 Construire et envoyer la réponse HTTP

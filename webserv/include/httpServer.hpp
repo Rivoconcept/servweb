@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpServer.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 19:04:03 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/10/02 15:49:03 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,8 @@ class Server
         void setupListeningSockets();
         void handleNewConnection(size_t index);
         void handleClientData(size_t index);
+        bool handleMultipart(const HttpRequest &req, const std::string &rawRequest,
+                             int client_fd, ServerConfig *serverConf, const LocationConfig *locationConf);
 
     public:
         Server(const HttpConfig &config, MimeTypes &types);

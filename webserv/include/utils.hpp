@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   utils.hpp                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/12 19:39:58 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/10/02 15:36:29 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,5 +33,10 @@ int ftToInt(const std::string &s);
 std::string ftStrdup(const char* s);
 std::string ftReadFile(const std::string &path);
 std::vector<std::string> ftSplitStr(const std::string& str, const std::string& delimiter);
+std::vector<std::string> splitParts(const std::string &body, const std::string &delimiter);
+std::string extractFilename(const std::string &part);
+std::string extractFileContent(const std::string &part);
+
+
 
 #endif

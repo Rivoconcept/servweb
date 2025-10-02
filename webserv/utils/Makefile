@@ -3,15 +3,16 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+         #
+#    By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/03/22 08:39:35 by rhanitra          #+#    #+#              #
-#    Updated: 2025/09/13 15:08:36 by rhanitra         ###   ########.fr        #
+#    Updated: 2025/10/02 15:35:35 by rivoinfo         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-UTILS = ftToInt.cpp ftReadFile.cpp ftSplitStr.cpp ftStrdup.cpp
-
+UTILS = ftToInt.cpp ftReadFile.cpp ftSplitStr.cpp ftStrdup.cpp \
+		extractFileContent.cpp extractFilename.cpp splitParts.cpp 
+		
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 CXX = c++
