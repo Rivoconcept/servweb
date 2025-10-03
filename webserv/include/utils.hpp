@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/02 15:36:29 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/03 13:30:09 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 #include <vector>
 #include <cstdlib>
 #include <cstring>
+#include <map>
+
 
 template <typename T>
 std::string ftToString(T value)
