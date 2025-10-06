@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/02 15:52:16 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/06 17:09:15 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,7 +99,7 @@ void Server::handleNewConnection(size_t index)
     }
 }
 
-bool Server::handleMultipart(const HttpRequest &req, const std::string &rawRequest,
+/*bool Server::handleMultipart(const HttpRequest &req, const std::string &rawRequest,
                              int client_fd, ServerConfig *serverConf, const LocationConfig *locationConf)
 {
     std::string contentType;
@@ -169,8 +169,118 @@ bool Server::handleMultipart(const HttpRequest &req, const std::string &rawReque
 
     send(client_fd, response.c_str(), response.size(), 0);
     return true; // ✅ Upload traité ici
+}*/
+
+
+void Server::handleMultipartUpload(const HttpRequest &req,
+                           const std::string &rawRequest,
+                           const std::string &uploadDir,
+                           ServerConfig *serverConf,
+                           const LocationConfig *locationConf,
+                           int client_fd)
+{
+    // ✅ 1) Récupérer boundary dans Content-Type
+    std::string contentType = req.headers.find("Content-Type") != req.headers.end()
+                              ? req.headers.find("Content-Type")->second
+                              : "";
+
+    size_t pos = contentType.find("boundary=");
+    if (pos == std::string::npos)
+    {
+        std::string response = HandleErrors::generateErrorResponse(
+            400, *serverConf, locationConf
+        );
+        send(client_fd, response.c_str(), response.size(), 0);
+        return;
+    }
+
+    std::string boundary = contentType.substr(pos + 9);
+    std::string delimiter = "--" + boundary;
+
+    // ✅ 2) Séparer le body
+    std::string body = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
+    std::vector<std::string> parts = splitParts(body, delimiter);
+
+    // ✅ 3) Map des champs textes
+    std::map<std::string, std::string> fields;
+    fields["FirstName"] = "";
+    fields["Name"] = "";
+    fields["sex"] = "";
+    fields["BirthDay"] = "";
+    fields["status"] = "";
+    fields["phone"] = "";
+    fields["email"] = "";
+    fields["information"] = "";
+
+    std::string uploadedFileName = "";
+
+    for (size_t i = 0; i < parts.size(); ++i) {
+        std::string disposition;
+        std::string content;
+        size_t headerEnd = parts[i].find("\r\n\r\n");
+        if (headerEnd == std::string::npos)
+            continue;
+
+        std::string headersPart = parts[i].substr(0, headerEnd);
+        content = parts[i].substr(headerEnd + 4);
+
+        if (content.size() >= 2 && content.substr(content.size() - 2) == "\r\n") {
+            content.erase(content.size() - 2);
+        }
+
+        std::istringstream iss(headersPart);
+        std::string line;
+        while (std::getline(iss, line)) {
+            if (line.find("Content-Disposition:") != std::string::npos) {
+                disposition = line;
+                break;
+            }
+        }
+
+        size_t namePos = disposition.find("name=\"");
+        if (namePos == std::string::npos)
+            continue;
+        namePos += 6;
+        size_t nameEnd = disposition.find("\"", namePos);
+        std::string fieldName = disposition.substr(namePos, nameEnd - namePos);
+
+        size_t filePos = disposition.find("filename=\"");
+        if (filePos != std::string::npos) {
+            filePos += 10;
+            size_t fileEnd = disposition.find("\"", filePos);
+            uploadedFileName = disposition.substr(filePos, fileEnd - filePos);
+
+            if (!uploadedFileName.empty())
+                saveUploadedFile(uploadDir, uploadedFileName, content);
+        } else if (fields.find(fieldName) != fields.end()) {
+            fields[fieldName] = content;
+        }
+    }
+
+    // ✅ Sauvegarder CSV
+    std::string csvPath = uploadDir + "/contacts.csv";
+    appendToCSV(fields, csvPath, uploadedFileName);
+
+    // ✅ 201 Created
+    std::string response =
+        "HTTP/1.1 201 Created\r\n"
+        "Content-Length: 0\r\n"
+        "Connection: close\r\n\r\n";
+
+    send(client_fd, response.c_str(), response.size(), 0);
 }
 
+void Server::saveUploadedFile(const std::string &uploadDir,
+                      const std::string &filename,
+                      const std::string &fileContent)
+{
+    std::string fullPath = uploadDir + "/" + filename;
+    std::ofstream out(fullPath.c_str(), std::ios::binary);
+    if (out.is_open()) {
+        out.write(fileContent.c_str(), fileContent.size());
+        out.close();
+    }
+}
 
 void Server::handleClientData(size_t index)
 {
@@ -242,10 +352,23 @@ void Server::handleClientData(size_t index)
     }
 
     if (req.method == "POST") {
-        bool handled = handleMultipart(req, rawRequest, client_fd, serverConf, locationConf);
-        if (handled)
-            return; // ✅ Ne pas continuer le flow normal
+        std::string contentType = req.headers["Content-Type"];
+        if (contentType.find("multipart/form-data") != std::string::npos) {
+
+            // ✅ Déterminer le répertoire d'upload
+            std::string uploadDir;
+            if (locationConf && !locationConf->root.empty())
+                uploadDir = locationConf->root;
+            else
+                uploadDir = serverConf->root;  // fallback
+
+            // ✅ Appeler le handler multipart
+            handleMultipartUpload(req, rawRequest, uploadDir, serverConf, locationConf, client_fd);
+            return;
+        }
     }
+
+
 
     // 🔹 Construire et envoyer la réponse HTTP
     HttpResponseBuilder builder(_mimeTypes);

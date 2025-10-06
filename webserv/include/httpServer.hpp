@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/02 15:49:03 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/06 17:08:28 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,11 @@ class Server
         void handleClientData(size_t index);
         bool handleMultipart(const HttpRequest &req, const std::string &rawRequest,
                              int client_fd, ServerConfig *serverConf, const LocationConfig *locationConf);
+        void saveUploadedFile(const std::string &uploadDir,
+                      const std::string &filename,
+                      const std::string &fileContent);             
+        void handleMultipartUpload(const HttpRequest &req, const std::string &rawRequest, const std::string &uploadDir,
+                           ServerConfig *serverConf, const LocationConfig *locationConf,int client_fd);
 
     public:
         Server(const HttpConfig &config, MimeTypes &types);

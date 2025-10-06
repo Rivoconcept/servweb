@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/03 13:30:09 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/06 17:07:59 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,6 +38,8 @@ std::vector<std::string> ftSplitStr(const std::string& str, const std::string& d
 std::vector<std::string> splitParts(const std::string &body, const std::string &delimiter);
 std::string extractFilename(const std::string &part);
 std::string extractFileContent(const std::string &part);
+void appendToCSV(const std::map<std::string, std::string> &fields, const std::string &csvPath, const std::string &uploadedFileName);
+// void saveUploadedFile(const std::string &uploadDir, const std::string &filename, const std::string &fileContent);
 
 
 
