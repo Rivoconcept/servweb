@@ -1,0 +1,84 @@
+#include "../include/httpUtils.hpp"
+#include <sstream>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#include <stdlib.h>
+#include <dirent.h>
+#include <string>
+#include <vector>
+
+std::string normalizeRelativePath(const std::string &relative)
+{
+    std::vector<std::string> parts;
+    std::istringstream ss(relative);
+    std::string token;
+    while (std::getline(ss, token, '/')) {
+        if (token.empty() || token == ".") continue;
+        if (token == "..") {
+            if (!parts.empty()) parts.pop_back();
+        } else parts.push_back(token);
+    }
+    std::string norm;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        norm += "/" + parts[i];
+    }
+    if (norm.empty()) norm = "/";
+    return norm;
+}
+
+bool isPathInsideRoot(const std::string &root, const std::string &target, std::string &outCanonicalTarget)
+{
+    char rootBuf[PATH_MAX];
+    if (!realpath(root.c_str(), rootBuf)) return false;
+    std::string canonRoot(rootBuf);
+
+    char targetBuf[PATH_MAX];
+    if (realpath(target.c_str(), targetBuf)) {
+        outCanonicalTarget = std::string(targetBuf);
+    } else {
+        // target may not exist yet; build path by concatenating
+        outCanonicalTarget = canonRoot + normalizeRelativePath(target);
+    }
+    return outCanonicalTarget.find(canonRoot) == 0;
+}
+
+std::string generateAutoindexHTML(const std::string &dirPath, const std::string &uri)
+{
+    DIR *dir = opendir(dirPath.c_str());
+    if (!dir) return std::string();
+    std::ostringstream oss;
+    oss << "<html><head><title>Index of " << uri << "</title></head><body>";
+    oss << "<h1>Index of " << uri << "</h1><ul>";
+    struct dirent *entry;
+    while ((entry = readdir(dir)) != NULL) {
+        std::string name(entry->d_name);
+        if (name == "." || name == "..") continue;
+        oss << "<li><a href=\"" << name << "\">" << name << "</a></li>";
+    }
+    oss << "</ul></body></html>";
+    closedir(dir);
+    return oss.str();
+}
+
+std::string parseCGIStatusFromHeaders(const std::string &headers)
+{
+    std::istringstream hh(headers);
+    std::string line;
+    while (std::getline(hh, line)) {
+        if (!line.empty() && line[line.size()-1] == '\r') line.erase(line.size()-1);
+        if (line.size() >= 7 && line.substr(0,7) == "Status:") {
+            std::string status = line.substr(7);
+            size_t s = status.find_first_not_of(" \t");
+            if (s != std::string::npos) status = status.substr(s);
+            return std::string("HTTP/1.1 ") + status + "\r\n";
+        }
+    }
+    return std::string();
+}
+
+bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize)
+{
+    if (clientMaxBodySize == 0) return false;
+    return contentLength > clientMaxBodySize;
+}

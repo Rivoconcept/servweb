@@ -6,12 +6,17 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/06 17:09:15 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/07 15:16:48 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpServer.hpp"
 #include "../include/httpResponse.hpp"
+#include <limits.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include "../include/httpUtils.hpp"
 
 
 Server::Server(const HttpConfig &config, MimeTypes &types) : _config(config), _mimeTypes(types)
@@ -99,175 +104,54 @@ void Server::handleNewConnection(size_t index)
     }
 }
 
-/*bool Server::handleMultipart(const HttpRequest &req, const std::string &rawRequest,
-                             int client_fd, ServerConfig *serverConf, const LocationConfig *locationConf)
+
+
+void Server::handleMultipartUpload(const HttpRequest &req, const std::string &rawRequest, const std::string &uploadDir, int client_fd)
+
 {
     std::string contentType;
     if (req.headers.find("Content-Type") != req.headers.end())
-        contentType = req.headers.at("Content-Type");
+        contentType = req.headers.find("Content-Type")->second;
 
     if (contentType.find("multipart/form-data") == std::string::npos)
-        return false; // ❌ Pas un upload multipart → on laisse le handler normal continuer
-
-    // ✅ 1) Boundary
-    size_t pos = contentType.find("boundary=");
-    if (pos == std::string::npos) {
-        std::string response = HandleErrors::generateErrorResponse(
-            400, *serverConf, locationConf
-        );
-        send(client_fd, response.c_str(), response.size(), 0);
-        return true; // ✅ On a traité (erreur)
-    }
-    std::string boundary = contentType.substr(pos + 9);
-
-    // ✅ 2) Body brut
-    size_t bodyPos = rawRequest.find("\r\n\r\n");
-    if (bodyPos == std::string::npos) {
-        std::string response = HandleErrors::generateErrorResponse(
-            400, *serverConf, locationConf
-        );
-        send(client_fd, response.c_str(), response.size(), 0);
-        return true;
-    }
-    std::string body = rawRequest.substr(bodyPos + 4);
-    std::string delimiter = "--" + boundary;
-
-    // ✅ 3) Split en parties
-    std::vector<std::string> parts = splitParts(body, delimiter);
-
-    // ✅ 4) Dossier d’upload
-    std::string uploadDir;
-    if (locationConf && !locationConf->root.empty())
-        uploadDir = locationConf->root;
-    else
-        uploadDir = serverConf->root;
-
-    // ✅ 5) Parcourir chaque part
-    for (size_t i = 0; i < parts.size(); ++i)
-    {
-        std::string filename = extractFilename(parts[i]);  
-        std::string fieldData = extractFileContent(parts[i]); 
-
-        if (!filename.empty()) {
-            std::string fullpath = uploadDir + "/" + filename;
-            std::ofstream file(fullpath.c_str(), std::ios::binary);
-            if (!file.is_open()) {
-                std::cerr << "Erreur : impossible d’écrire dans " << fullpath << std::endl;
-            } else {
-                file.write(fieldData.c_str(), fieldData.size());
-                file.close();
-            }
-        }
-
-    }
-
-    // ✅ 6) Réponse HTTP
-    std::string response =
-        "HTTP/1.1 201 Created\r\n"
-        "Content-Length: 0\r\n"
-        "Connection: close\r\n\r\n";
-
-    send(client_fd, response.c_str(), response.size(), 0);
-    return true; // ✅ Upload traité ici
-}*/
-
-
-void Server::handleMultipartUpload(const HttpRequest &req,
-                           const std::string &rawRequest,
-                           const std::string &uploadDir,
-                           ServerConfig *serverConf,
-                           const LocationConfig *locationConf,
-                           int client_fd)
-{
-    // ✅ 1) Récupérer boundary dans Content-Type
-    std::string contentType = req.headers.find("Content-Type") != req.headers.end()
-                              ? req.headers.find("Content-Type")->second
-                              : "";
+        return;
 
     size_t pos = contentType.find("boundary=");
     if (pos == std::string::npos)
-    {
-        std::string response = HandleErrors::generateErrorResponse(
-            400, *serverConf, locationConf
-        );
-        send(client_fd, response.c_str(), response.size(), 0);
         return;
-    }
 
     std::string boundary = contentType.substr(pos + 9);
+    std::string body = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
     std::string delimiter = "--" + boundary;
 
-    // ✅ 2) Séparer le body
-    std::string body = rawRequest.substr(rawRequest.find("\r\n\r\n") + 4);
     std::vector<std::string> parts = splitParts(body, delimiter);
 
-    // ✅ 3) Map des champs textes
     std::map<std::string, std::string> fields;
-    fields["FirstName"] = "";
-    fields["Name"] = "";
-    fields["sex"] = "";
-    fields["BirthDay"] = "";
-    fields["status"] = "";
-    fields["phone"] = "";
-    fields["email"] = "";
-    fields["information"] = "";
+    std::string uploadedFilename;
 
-    std::string uploadedFileName = "";
+    for (size_t i = 0; i < parts.size(); ++i)
+    {
+        std::string name = extractFieldName(parts[i]);
+        std::string filename = extractFilename(parts[i]);
+        std::string data = extractFileContent(parts[i]);
 
-    for (size_t i = 0; i < parts.size(); ++i) {
-        std::string disposition;
-        std::string content;
-        size_t headerEnd = parts[i].find("\r\n\r\n");
-        if (headerEnd == std::string::npos)
-            continue;
-
-        std::string headersPart = parts[i].substr(0, headerEnd);
-        content = parts[i].substr(headerEnd + 4);
-
-        if (content.size() >= 2 && content.substr(content.size() - 2) == "\r\n") {
-            content.erase(content.size() - 2);
-        }
-
-        std::istringstream iss(headersPart);
-        std::string line;
-        while (std::getline(iss, line)) {
-            if (line.find("Content-Disposition:") != std::string::npos) {
-                disposition = line;
-                break;
-            }
-        }
-
-        size_t namePos = disposition.find("name=\"");
-        if (namePos == std::string::npos)
-            continue;
-        namePos += 6;
-        size_t nameEnd = disposition.find("\"", namePos);
-        std::string fieldName = disposition.substr(namePos, nameEnd - namePos);
-
-        size_t filePos = disposition.find("filename=\"");
-        if (filePos != std::string::npos) {
-            filePos += 10;
-            size_t fileEnd = disposition.find("\"", filePos);
-            uploadedFileName = disposition.substr(filePos, fileEnd - filePos);
-
-            if (!uploadedFileName.empty())
-                saveUploadedFile(uploadDir, uploadedFileName, content);
-        } else if (fields.find(fieldName) != fields.end()) {
-            fields[fieldName] = content;
+        if (!filename.empty()) {
+            saveUploadedFile(uploadDir, filename, data);
+            uploadedFilename = filename;
+        } else if (!name.empty()) {
+            fields[name] = data;
         }
     }
 
-    // ✅ Sauvegarder CSV
-    std::string csvPath = uploadDir + "/contacts.csv";
-    appendToCSV(fields, csvPath, uploadedFileName);
+    // Ajout du fichier CSV
+    appendToCSV(fields, uploadDir + "/contacts.csv", uploadedFilename);
 
-    // ✅ 201 Created
     std::string response =
         "HTTP/1.1 201 Created\r\n"
         "Content-Length: 0\r\n"
         "Connection: close\r\n\r\n";
 
-    send(client_fd, response.c_str(), response.size(), 0);
+    HandleErrors::sendResponse(client_fd, response);
 }
 
 void Server::saveUploadedFile(const std::string &uploadDir,
@@ -287,15 +171,60 @@ void Server::handleClientData(size_t index)
     char buffer[BUFFER_SIZE] = {0};
     int client_fd = _fds[index].fd;
 
-    int received = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-    if (received <= 0) {
-        close(client_fd);
-        _clientToServer.erase(client_fd);
-        _fds.erase(_fds.begin() + index);
-        return;
-    }
+    std::string rawRequest;
+    // Read from socket until we have received headers and the full body
+    while (true) {
+        int received = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (received < 0) {
+            // recv error: close client
+            close(client_fd);
+            _clientToServer.erase(client_fd);
+            _fds.erase(_fds.begin() + index);
+            return;
+        }
+        if (received == 0) {
+            // connection closed by peer
+            break;
+        }
+        rawRequest.append(buffer, received);
 
-    std::string rawRequest(buffer, received);
+        // Do we have the end of headers?
+        size_t hdrEnd = rawRequest.find("\r\n\r\n");
+        if (hdrEnd != std::string::npos) {
+            // Try to find Content-Length header
+            size_t contentLenPos = rawRequest.find("Content-Length:");
+            if (contentLenPos != std::string::npos) {
+                // extract number after header
+                size_t lineEnd = rawRequest.find("\r\n", contentLenPos);
+                if (lineEnd == std::string::npos)
+                    lineEnd = hdrEnd; // defensive
+                size_t valStart = contentLenPos + strlen("Content-Length:");
+                std::string val = rawRequest.substr(valStart, lineEnd - valStart);
+                // trim spaces
+                size_t first = val.find_first_not_of(" \t");
+                size_t last = val.find_last_not_of(" \t");
+                if (first != std::string::npos && last != std::string::npos)
+                    val = val.substr(first, last - first + 1);
+                else
+                    val = "0";
+
+                size_t contentLength = static_cast<size_t>(atoi(val.c_str()));
+                size_t bodyLen = rawRequest.size() - (hdrEnd + 4);
+                if (bodyLen >= contentLength) {
+                    // we have whole body
+                    break;
+                }
+                // else continue reading
+            } else {
+                // No Content-Length => can't determine body length; break and let parser handle it
+                break;
+            }
+        }
+        // else continue reading
+        // small safeguard: if rawRequest grows too large without headers, stop to avoid DoS
+        if (rawRequest.size() > 10 * 1024 * 1024) // 10MB
+            break;
+    }
     HttpRequestParser parser;
     HttpRequest req;
 
@@ -305,10 +234,10 @@ void Server::handleClientData(size_t index)
     catch (std::exception &e)
     {
         // 🔹 Requête malformée → 400 Bad Request
-        std::string response = HandleErrors::generateErrorResponse(
-            400, *_clientToServer[client_fd], NULL
-        );
-        send(client_fd, response.c_str(), response.size(), 0);
+        if (_clientToServer.count(client_fd) && _clientToServer[client_fd])
+            HandleErrors::sendError(client_fd, 400, *_clientToServer[client_fd], NULL);
+        else
+            std::cerr << "handleClientData: client config missing when sending 400\n";
         return;
     }
     // 🔹 Récupérer la config du serveur associé
@@ -317,6 +246,7 @@ void Server::handleClientData(size_t index)
         std::cerr << "Error: no server config found for client " << client_fd << "\n";
         return;
     }
+
 
     // 🔹 Trouver la meilleure location
     const LocationConfig* locationConf = NULL;
@@ -333,6 +263,12 @@ void Server::handleClientData(size_t index)
     if (!locationConf && !serverConf->locations.empty())
         locationConf = &serverConf->locations[0];
 
+    // Enforcer client_max_body_size (après détermination de la location)
+    if (checkClientMaxBodySize(req.contentLength, serverConf->clientMaxBodySize)) {
+        HandleErrors::sendError(client_fd, 413, *serverConf, locationConf);
+        return;
+    }
+
     // 🔹 Vérifier méthode autorisée (avec fallback par défaut)
     std::set<std::string> allowed;
     if (locationConf && !locationConf->methods.empty()) {
@@ -344,10 +280,7 @@ void Server::handleClientData(size_t index)
     }
 
     if (allowed.find(req.method) == allowed.end()) {
-        std::string response = HandleErrors::generateErrorResponse(
-            405, *serverConf, locationConf, "Allow: GET, POST, DELETE\r\n"
-        );
-        send(client_fd, response.c_str(), response.size(), 0);
+        HandleErrors::sendError(client_fd, 405, *serverConf, locationConf, "Allow: GET, POST, DELETE\r\n");
         return;
     }
 
@@ -363,9 +296,58 @@ void Server::handleClientData(size_t index)
                 uploadDir = serverConf->root;  // fallback
 
             // ✅ Appeler le handler multipart
-            handleMultipartUpload(req, rawRequest, uploadDir, serverConf, locationConf, client_fd);
+            handleMultipartUpload(req, rawRequest, uploadDir, client_fd);
             return;
         }
+    }
+
+    // DELETE handler
+    if (req.method == "DELETE") {
+        // Calculer le répertoire root
+        std::string root = (locationConf && !locationConf->root.empty()) ? locationConf->root : serverConf->root;
+
+        // Calculer path brut relatif à la location
+        std::string rawRel;
+        if (locationConf && !locationConf->path.empty() && req.uri.find(locationConf->path) == 0)
+            rawRel = req.uri.substr(locationConf->path.size());
+        else if (!req.uri.empty() && req.uri[0] == '/')
+            rawRel = req.uri.substr(1);
+        else
+            rawRel = req.uri;
+
+        if (rawRel.empty()) {
+            HandleErrors::sendError(client_fd, 403, *serverConf, locationConf);
+            return;
+        }
+
+        std::string normRel = normalizeRelativePath(rawRel);
+        std::string targetPath = root + normRel;
+
+        std::string canonTarget;
+        if (!isPathInsideRoot(root, targetPath, canonTarget)) {
+            HandleErrors::sendError(client_fd, 403, *serverConf, locationConf);
+            return;
+        }
+
+        struct stat st;
+        if (stat(canonTarget.c_str(), &st) == -1) {
+            HandleErrors::sendError(client_fd, 404, *serverConf, locationConf);
+            return;
+        }
+        if (S_ISDIR(st.st_mode)) {
+            // refuse delete of directory for now
+            HandleErrors::sendError(client_fd, 403, *serverConf, locationConf);
+            return;
+        }
+
+        if (unlink(canonTarget.c_str()) == -1) {
+            HandleErrors::sendError(client_fd, 500, *serverConf, locationConf);
+            return;
+        }
+
+        std::string resp = "HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+        HandleErrors::sendResponse(client_fd, resp);
+        return;
     }
 
 
@@ -380,7 +362,7 @@ void Server::handleClientData(size_t index)
         response = HandleErrors::generateErrorResponse(500, *serverConf, locationConf);
     }
 
-    send(client_fd, response.c_str(), response.size(), 0);
+    HandleErrors::sendResponse(client_fd, response);
 }
 
 

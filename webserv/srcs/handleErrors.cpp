@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "../include/handleErrors.hpp"
+#include <sys/socket.h>
+#include <unistd.h>
 
 std::map<int, std::string> HandleErrors::initReasonMap() {
     std::map<int, std::string> reasons;
@@ -95,5 +97,42 @@ std::string HandleErrors::generateErrorResponse(
     oss << body;
 
     return oss.str();
+}
+
+void HandleErrors::sendError(int client_fd, int code, const ServerConfig &serverConf, const LocationConfig *locationConf, const std::string &extraHeaders)
+{
+    std::string resp = generateErrorResponse(code, serverConf, locationConf, extraHeaders);
+    sendResponse(client_fd, resp);
+}
+
+void HandleErrors::sendResponse(int client_fd, const std::string &response)
+{
+    if (client_fd < 0)
+        return;
+
+    const char *data = response.c_str();
+    size_t toSend = response.size();
+    while (toSend > 0) {
+        ssize_t n = ::send(client_fd, data, toSend, 0);
+        if (n > 0) {
+            toSend -= n;
+            data += n;
+            continue;
+        }
+        if (n == 0) {
+            // peer closed
+            ::close(client_fd);
+            return;
+        }
+        // n < 0 : error
+        if (errno == EINTR) continue; // retry
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // non-blocking socket would block, give up for now
+            return;
+        }
+        // EPIPE or other fatal -> close socket and stop
+        ::close(client_fd);
+        return;
+    }
 }
 
