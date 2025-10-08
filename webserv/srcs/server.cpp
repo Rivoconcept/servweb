@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/07 15:16:48 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/08 09:06:11 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "../include/httpUtils.hpp"
+#include "../include/utils.hpp"
+
+// Forward declarations (should be in utils.hpp; added here to ensure visibility)
+std::string normalizeRelativePath(const std::string &relative);
+bool isPathInsideRoot(const std::string &root, const std::string &target, std::string &outCanonicalTarget);
+bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
 
 
 Server::Server(const HttpConfig &config, MimeTypes &types) : _config(config), _mimeTypes(types)

@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/07 16:33:35 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/08 09:06:51 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,11 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include <limits.h>
-#include "../include/httpUtils.hpp"
+#include "../include/utils.hpp"
+
+// Forward declarations for utils functions (ensures visibility)
+std::string parseCGIStatusFromHeaders(const std::string &headers);
+std::string generateAutoindexHTML(const std::string &dirPath, const std::string &uri);
 
 HttpResponseBuilder::HttpResponseBuilder(const MimeTypes &types)
         : _mimeTypes(types) {}
