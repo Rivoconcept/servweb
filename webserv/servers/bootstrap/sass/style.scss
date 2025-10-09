@@ -128,3 +128,10 @@ body {
     background: black;
     color: white;
 }
+
+.imgGet img {
+  display: block;
+  max-width: 100%;
+  width: 600px;    /* ou width: auto / width: 100% selon le besoin */
+  height: auto;
+}

@@ -12,6 +12,7 @@
   align-items: center;
   min-height: 100vh;
 }
+/* image helpers (moved to end of file to ensure not inside a comment) */
 
 .form {
   width: 90%;
@@ -120,4 +121,18 @@
 .form .Validation button:hover {
   background: white;
   color: black;
-}*/
+}
+
+/* image helpers */
+.imgGet img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.5rem 0;
+}
+
+/* bootstrap-like helper if not present */
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
