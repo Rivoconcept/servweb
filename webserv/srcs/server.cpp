@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/08 09:06:11 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/10 15:51:18 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "../include/utils.hpp"
 
 // Forward declarations (should be in utils.hpp; added here to ensure visibility)
@@ -58,14 +59,16 @@ void Server::setupListeningSockets()
 
         if (bind(sock, (sockaddr*)&addr, sizeof(addr)) == -1)
         {
-            std::cerr << "Error: bind failed on port " << _config.servers[i].listenPort << "\n";
+            std::cerr << "Error: bind failed on port " << _config.servers[i].listenPort
+                      << " (errno=" << errno << ") " << strerror(errno) << "\n";
             close(sock);
             continue;
         }
 
         if (listen(sock, MAX_PENDING_QUEUE) == -1)
         {
-            std::cerr << "Error: listen failed on port " << _config.servers[i].listenPort << "\n";
+            std::cerr << "Error: listen failed on port " << _config.servers[i].listenPort
+                      << " (errno=" << errno << ") " << strerror(errno) << "\n";
             close(sock);
             continue;
         }

@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/08 09:06:51 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/10 15:38:21 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 std::string parseCGIStatusFromHeaders(const std::string &headers);
 std::string generateAutoindexHTML(const std::string &dirPath, const std::string &uri);
 
+// ...existing code...
+
 HttpResponseBuilder::HttpResponseBuilder(const MimeTypes &types)
         : _mimeTypes(types) {}
 
@@ -32,6 +34,8 @@ std::string HttpResponseBuilder::getMimeType(const std::string &path)
         return ("application/octet-stream");
 
     std::string ext = path.substr(dotPos + 1);
+    // normalize extension to lowercase to support files with uppercase extensions
+    for (size_t i = 0; i < ext.size(); ++i) ext[i] = tolower(ext[i]);
     std::map<std::string, std::string>::const_iterator it = _mimeTypes.types.find(ext);
     if (it != _mimeTypes.types.end())
         return (it->second);

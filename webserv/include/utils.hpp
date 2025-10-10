@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/07 16:13:31 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/10 10:12:42 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,5 +40,11 @@ std::string extractFilename(const std::string &part);
 std::string extractFileContent(const std::string &part);
 void appendToCSV(const std::map<std::string, std::string> &fields, const std::string &csvPath, const std::string &uploadedFileName);
 std::string extractFieldName(const std::string &part);
+
+std::string normalizeRelativePath(const std::string &relative);
+bool isPathInsideRoot(const std::string &root, const std::string &target, std::string &outCanonicalTarget);
+std::string generateAutoindexHTML(const std::string &dirPath, const std::string &uri);
+std::string parseCGIStatusFromHeaders(const std::string &headers);
+bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
 
 #endif
