@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/10 10:12:42 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/15 10:10:17 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,5 +46,7 @@ bool isPathInsideRoot(const std::string &root, const std::string &target, std::s
 std::string generateAutoindexHTML(const std::string &dirPath, const std::string &uri);
 std::string parseCGIStatusFromHeaders(const std::string &headers);
 bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
+// Dechunk a Transfer-Encoding: chunked body. Returns empty string on parse error.
+std::string dechunkBody(const std::string &chunkedBody);
 
 #endif

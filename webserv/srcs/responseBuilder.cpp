@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/10 15:38:21 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/15 09:14:42 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,5 +182,8 @@ std::string HttpResponseBuilder::buildResponse(
 
     return statusLine + headers + "\r\n\r\n" + body;
 }
+
+
+
 
 
