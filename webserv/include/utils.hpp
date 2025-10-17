@@ -6,12 +6,21 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/15 10:10:17 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/17 17:52:53 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef UTILS_HPP
 #define UTILS_HPP
+
+// #include "httpRequest.hpp"
+#include "httpConfig.hpp"
+
+#include "httpRequest.hpp"   // nécessaire car tu passes HttpRequest par référence
+
+// ✅ Forward declaration pour éviter d'inclure httpConfig.hpp ici
+class LocationConfig;
+class HttpRequest;
 
 #include <stdexcept>
 #include <string>
@@ -21,6 +30,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <map>
+
 
 
 template <typename T>
@@ -48,5 +58,7 @@ std::string parseCGIStatusFromHeaders(const std::string &headers);
 bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
 // Dechunk a Transfer-Encoding: chunked body. Returns empty string on parse error.
 std::string dechunkBody(const std::string &chunkedBody);
+
+bool isCgiRequest(const HttpRequest &req, const LocationConfig *locationConf, std::string &cgiPath);
 
 #endif
