@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/17 17:52:53 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/20 10:10:55 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,6 +59,6 @@ bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
 // Dechunk a Transfer-Encoding: chunked body. Returns empty string on parse error.
 std::string dechunkBody(const std::string &chunkedBody);
 
-bool isCgiRequest(const HttpRequest &req, const LocationConfig *locationConf, std::string &cgiPath);
+bool isCgiRequest(const HttpRequest &req, const LocationConfig &locationConf, std::string &cgiPath);
 
 #endif

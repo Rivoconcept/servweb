@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/15 10:01:57 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/20 10:08:17 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,9 +65,9 @@ class Server
         void handleClientData(size_t index);
         void saveUploadedFile(const std::string &uploadDir, const std::string &filename, const std::string &fileContent);             
         void handleMultipartUpload(const HttpRequest &req, const std::string &rawRequest, const std::string &uploadDir, int client_fd);
-    void queueResponse(int client_fd, const std::string &response);
-    void handlePollOut(size_t index);
-    void closeClient(size_t index);
+        void queueResponse(int client_fd, const std::string &response);
+        void handlePollOut(size_t index);
+        void closeClient(size_t index);
 
 
     public:

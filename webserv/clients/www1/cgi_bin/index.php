@@ -1,9 +1,32 @@
 <?php
+echo "<h1>CGI PHP Test</h1>";
 
-$name = 'rivo';
-$note1 = 20;
-$note3 = 10;
-$moyenne = ($note1 + $note3) / 2;
+// Afficher l'heure
+echo "<p>Heure du serveur : " . date("Y-m-d H:i:s") . "</p>";
 
-echo "Bonjour $name Votre moyenne est de $moyenne";
+// Afficher les variables GET
+if (!empty($_GET)) {
+    echo "<h2>Variables GET :</h2><ul>";
+    foreach ($_GET as $key => $value) {
+        echo "<li>$key = $value</li>";
+    }
+    echo "</ul>";
+}
+
+// Afficher les variables POST
+if (!empty($_POST)) {
+    echo "<h2>Variables POST :</h2><ul>";
+    foreach ($_POST as $key => $value) {
+        echo "<li>$key = $value</li>";
+    }
+    echo "</ul>";
+}
+
+// Petit formulaire pour tester POST
+echo '
+<form method="POST">
+    <input type="text" name="username" placeholder="Votre nom"/>
+    <input type="submit" value="Envoyer"/>
+</form>
+';
 ?>

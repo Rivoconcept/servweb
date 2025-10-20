@@ -120,21 +120,18 @@ std::string dechunkBody(const std::string &chunkedBody)
     return std::string();
 }
 
-bool isCgiRequest(const HttpRequest &req, const LocationConfig &loc, std::string &scriptPath) {
-    // Vérifier que la location a bien une extension CGI définie
-    if (loc.cgiExtension.empty()) return false;
+bool isCgiRequest(const HttpRequest &req, const LocationConfig &locationConf, std::string &cgiPath)
+{
+    if (locationConf.cgiExtension.empty())
+        return false;
+    if (req.uri.size() < locationConf.cgiExtension.size())
+        return false;
 
-    // Vérifier que l’URI commence par le path de la location
-    if (req.uri.rfind(loc.path, 0) != 0) return false; // ne commence pas par loc.path
-
-    // Vérifier l’extension
-    if (req.uri.size() >= loc.cgiExtension.size() &&
-        req.uri.compare(req.uri.size() - loc.cgiExtension.size(),
-                        loc.cgiExtension.size(), loc.cgiExtension) == 0) {
-
-        scriptPath = loc.root + req.uri.substr(loc.path.size());
+    if (req.uri.compare(req.uri.size() - locationConf.cgiExtension.size(),
+        locationConf.cgiExtension.size(), locationConf.cgiExtension) == 0)
+    {
+        cgiPath = locationConf.root + req.uri.substr(locationConf.path.size());
         return true;
     }
-
     return false;
 }

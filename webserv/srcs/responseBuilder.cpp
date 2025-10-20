@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/17 17:50:39 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/20 10:16:11 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ std::string HttpResponseBuilder::buildResponse(
     {
         // 🔹 Vérifier si la requête correspond à un CGI
         std::string cgiScript;
-        if (isCgiRequest(req, &locationConf, cgiScript))
+        if (isCgiRequest(req, locationConf, cgiScript))
         {
             HandleCGI cgi(req, serverConf, locationConf);
             cgi.buildEnv();
