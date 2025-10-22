@@ -6,12 +6,13 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/20 10:08:25 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/21 16:47:09 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpServer.hpp"
 #include "../include/httpResponse.hpp"
+#include "../include/httpConfig.hpp"
 #include <limits.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -26,10 +27,12 @@ bool isPathInsideRoot(const std::string &root, const std::string &target, std::s
 bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
 
 
-Server::Server(const HttpConfig &config, MimeTypes &types) : _config(config), _mimeTypes(types)
+Server::Server(const HttpConfig &config, MimeTypes &types)
+    : _config(config), _mimeTypes(types)
 {
     setupListeningSockets();
 }
+
 
 Server::~Server()
 {
@@ -302,7 +305,7 @@ void Server::handleClientData(size_t index)
 
         // enforce client_max_body_size if configured
         if (_clientToServer.count(client_fd) && _clientToServer[client_fd]) {
-            ServerConfig *sconf = _clientToServer[client_fd];
+            const ServerConfig *sconf = _clientToServer[client_fd];
             if (sconf->clientMaxBodySize > 0 && dechunked.size() > sconf->clientMaxBodySize) {
                 queueResponse(client_fd, HandleErrors::generateErrorResponse(413, *sconf, NULL));
                 state.readBuffer.clear();
@@ -331,7 +334,7 @@ void Server::handleClientData(size_t index)
         return;
     }
     // 🔹 Récupérer la config du serveur associé
-    ServerConfig *serverConf = _clientToServer[client_fd];
+    const ServerConfig *serverConf = _clientToServer[client_fd];
     if (!serverConf) {
         std::cerr << "Error: no server config found for client " << client_fd << "\n";
         return;

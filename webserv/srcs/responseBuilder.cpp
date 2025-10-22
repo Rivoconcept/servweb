@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:17:28 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/20 10:16:11 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/21 14:24:50 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <dirent.h>
 #include <limits.h>
 #include "../include/utils.hpp"
+#include "../include/handleErrors.hpp"
 
 // Forward declarations for utils functions (ensures visibility)
 std::string parseCGIStatusFromHeaders(const std::string &headers);
@@ -53,6 +54,39 @@ std::string HttpResponseBuilder::buildResponse(
 
     try
     {
+        // =====================================================
+        // 🔹 GESTION DE LA MÉTHODE DELETE
+        // =====================================================
+        if (req.method == "DELETE") {
+            std::string filePath = resolveFilePath(req, serverConf, locationConf);
+
+            std::cerr << "[DELETE] filePath='" << filePath << "'\n";
+
+            struct stat st;
+            if (stat(filePath.c_str(), &st) != 0) {
+                // 🔸 Fichier non trouvé
+                return HandleErrors::generateErrorResponse(404, serverConf, &locationConf);
+            }
+
+            if (S_ISDIR(st.st_mode)) {
+                // 🔸 Tentative de suppression d’un dossier
+                return HandleErrors::generateErrorResponse(403, serverConf, &locationConf);
+            }
+
+            if (unlink(filePath.c_str()) != 0) {
+                // 🔸 Erreur système (permissions, etc.)
+                return HandleErrors::generateErrorResponse(500, serverConf, &locationConf);
+            }
+
+            // ✅ Suppression réussie → 204 No Content
+            std::string response;
+            response  = "HTTP/1.1 204 No Content\r\n";
+            response += "Content-Length: 0\r\n";
+            response += "Connection: close\r\n\r\n";
+            return response;
+        }
+
+
         // 🔹 Vérifier si la requête correspond à un CGI
         std::string cgiScript;
         if (isCgiRequest(req, locationConf, cgiScript))

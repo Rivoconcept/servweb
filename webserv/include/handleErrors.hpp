@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/22 19:25:19 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/07 14:41:15 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/21 16:07:46 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,9 @@
 #include <fstream>
 #include <iostream>
 #include "httpConfig.hpp"
+
+class ServerConfig;
+class LocationConfig;
 
 class HandleErrors
 {

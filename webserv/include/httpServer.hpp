@@ -6,14 +6,13 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/20 10:08:17 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/21 16:45:41 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef HTTPSERVER_HPP
 #define HTTPSERVER_HPP
 
-#include "httpConfig.hpp"
 #include "httpRequest.hpp"
 #include "handleErrors.hpp"
 #include "utils.hpp"
@@ -29,6 +28,14 @@
 #include <map>
 #include <string>
 
+class HttpConfig; 
+class ServerConfig;
+class LocationConfig;
+class MimeTypes;
+class HttpRequest;
+class HttpResponseBuilder;
+class HandleErrors;
+
 static const size_t BUFFER_SIZE = 1024;
 static const int MAX_PENDING_QUEUE = 10;
 static const int MAX_CLIENTS = 100;
@@ -37,11 +44,11 @@ static const int MAX_CLIENTS = 100;
 class Server
 {
     private:
-        HttpConfig _config;
+        const HttpConfig &_config;
         std::vector<struct pollfd> _fds;
         std::vector<int> _clientSockets;
-        std::map<int, ServerConfig*> _listenSockets;
-        std::map<int, ServerConfig*> _clientToServer;
+        std::map<int, const ServerConfig*> _listenSockets;
+        std::map<int, const ServerConfig*> _clientToServer;
         MimeTypes &_mimeTypes;
         // Outgoing send buffers for non-blocking writes
         std::map<int, std::string> _sendBuffers;
