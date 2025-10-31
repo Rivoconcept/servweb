@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/21 16:47:09 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/31 17:49:45 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -550,7 +550,27 @@ void Server::run()
     }
 }
 
+
 void Server::queueResponse(int client_fd, const std::string &response)
+{
+    if (client_fd < 0)
+        return;
+
+    // ✅ Remplacer += par = pour ne pas accumuler d'octets parasites
+    _sendBuffers[client_fd] = response;
+    _closeAfterSend[client_fd] = true; // ferme la connexion après envoi
+
+    // Activer POLLOUT pour que le poll envoie les données
+    for (size_t i = 0; i < _fds.size(); ++i) {
+        if (_fds[i].fd == client_fd) {
+            _fds[i].events |= POLLOUT;
+            break;
+        }
+    }
+}
+
+
+/*void Server::queueResponse(int client_fd, const std::string &response)
 {
     if (client_fd < 0) return;
     _sendBuffers[client_fd] += response;
@@ -563,7 +583,7 @@ void Server::queueResponse(int client_fd, const std::string &response)
             break;
         }
     }
-}
+}*/
 
 void Server::handlePollOut(size_t index)
 {

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   handleErrors.hpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/22 19:25:19 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/21 16:07:46 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/10/22 16:40:10 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
