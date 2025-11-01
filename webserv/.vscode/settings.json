@@ -59,6 +59,7 @@
         "text_encoding": "cpp",
         "variant": "cpp",
         "set": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "csignal": "cpp"
     }
 }

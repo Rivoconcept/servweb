@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/31 17:49:45 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/01 11:01:26 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -556,11 +556,9 @@ void Server::queueResponse(int client_fd, const std::string &response)
     if (client_fd < 0)
         return;
 
-    // ✅ Remplacer += par = pour ne pas accumuler d'octets parasites
     _sendBuffers[client_fd] = response;
-    _closeAfterSend[client_fd] = true; // ferme la connexion après envoi
+    _closeAfterSend[client_fd] = true; 
 
-    // Activer POLLOUT pour que le poll envoie les données
     for (size_t i = 0; i < _fds.size(); ++i) {
         if (_fds[i].fd == client_fd) {
             _fds[i].events |= POLLOUT;
@@ -568,22 +566,6 @@ void Server::queueResponse(int client_fd, const std::string &response)
         }
     }
 }
-
-
-/*void Server::queueResponse(int client_fd, const std::string &response)
-{
-    if (client_fd < 0) return;
-    _sendBuffers[client_fd] += response;
-    _closeAfterSend[client_fd] = true; // default: close after response
-
-    // find pollfd for client and enable POLLOUT
-    for (size_t i = 0; i < _fds.size(); ++i) {
-        if (_fds[i].fd == client_fd) {
-            _fds[i].events |= POLLOUT;
-            break;
-        }
-    }
-}*/
 
 void Server::handlePollOut(size_t index)
 {
@@ -637,4 +619,25 @@ void Server::closeClient(size_t index)
     // remove the pollfd entry
     _fds.erase(_fds.begin() + index);
 }
+
+void Server::cleanup()
+{
+    std::cout << "Closing all client connections...\n";
+    
+    while (!_clientSockets.empty())
+    {
+        closeClient(0);
+    }
+
+    std::cout << "Closing listening sockets...\n";
+    // Fermer les sockets d'écoute
+    for (size_t i = 0; i < _fds.size(); ++i)
+        ::close(_fds[i].fd);
+    _fds.clear();
+    _listenSockets.clear();
+
+    std::cout << "Server cleanup done.\n";
+}
+
+
 

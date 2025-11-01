@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpServer.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/10/21 16:45:41 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/11/01 10:50:16 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@
 #include <set>
 #include <map>
 #include <string>
+#include <csignal>
 
 class HttpConfig; 
 class ServerConfig;
@@ -83,6 +84,7 @@ class Server
 
 
         void run();
+        void cleanup();
 };
 
 #endif
