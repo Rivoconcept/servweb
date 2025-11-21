@@ -25,6 +25,24 @@ document.getElementById('deleteBtn').addEventListener('click', function()
     });
 });
 
+
+const sentence = `Comment faire les choses correctements sans savoir des choses comment ni les choses à faire`
+
+
+const words = sentence.split(' ')
+
+for (let word of words)
+{
+    let n = 0;
+    for (let i in words)
+    {
+        if (word.toLowerCase() === words[i].toLocaleLowerCase())
+        {
+            n++;
+        }
+    }
+    console.log(`${word} (${n})`)
+}
 /*function getRandomInt(max)
 {
     return (Math.floor(Math.random() * (max + 1)));
@@ -78,10 +96,61 @@ console.log('11', isPremier(11));
 console.log('12', isPremier(12));*/
 
 
-function isPalendrome(word)
-{
-    const reverseWord = word
-        .split-
+/*const students = [
+    {
+        name : 'John',
+        notes: [1, 20, 18, 19, 12]
+    },
+    {
+        name : 'Jane',
+        notes: [17, 18, 20, 13, 15]
+    },
+    {
+        name : 'Sophie',
+        notes: [17, 12, 14, 15, 13]
+    },
+    {
+        name : 'Marc',
+        notes: [2, 3, 5, 8, 9]
+    },
+    {
+        name : 'Manon',
+        notes: [18, 17, 18, 19, 12]
+    },
+]
+
+const calculMoyenne = (notes) => {
+    let sum = 0;
+    for (let note of notes)
+    {
+        sum += note
+    }
+    return (sum / notes.length)
 }
 
-console.log(reverse("Salut"));
+
+for (let student of students)
+{
+    student.moyenne = calculMoyenne(student.notes);
+    student.best = Math.max(...student.notes)
+    student.worst = Math.min(...student.notes)
+}
+
+
+function compareStudents(a, b)
+{
+    return (b.moyenne - a.moyenne)
+}
+
+students.sort(compareStudents)
+
+const formatStudent = (student) => {
+    return (`${student.name} avec une moyenne de ${student.moyenne}. Sa meilleure note ${student.best} et sa mauvaise note ${student.worst}`)
+}
+
+console.log('Top 3 des étudiants')
+
+for (let i = 0; i < 3; i++)
+{
+    console.log(`${i}: ${formatStudent(students[i])}`)
+}*/
