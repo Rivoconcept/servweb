@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/01 10:50:16 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/25 17:37:29 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,9 +51,11 @@ class Server
         std::map<int, const ServerConfig*> _listenSockets;
         std::map<int, const ServerConfig*> _clientToServer;
         MimeTypes &_mimeTypes;
+        
         // Outgoing send buffers for non-blocking writes
         std::map<int, std::string> _sendBuffers;
         std::map<int, bool> _closeAfterSend;
+        
         // Per-client read buffers and parsing state
         struct ClientState {
             std::string readBuffer;
@@ -65,8 +67,8 @@ class Server
             ClientState(): readBuffer(), headersComplete(false), expectedBody(0), chunked(false), lastActivity(0), createdAt(0) {}
         };
         std::map<int, ClientState> _clients;
-    static const int CLIENT_IDLE_TIMEOUT_SEC = 60; // close after 60s idle
-    static const int CLIENT_TOTAL_TIMEOUT_SEC = 300; // max 5 minutes per connection
+        static const int CLIENT_IDLE_TIMEOUT_SEC = 60; // close after 60s idle
+        static const int CLIENT_TOTAL_TIMEOUT_SEC = 300; // max 5 minutes per connection
 
         void setupListeningSockets();
         void handleNewConnection(size_t index);

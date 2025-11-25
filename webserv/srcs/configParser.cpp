@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 17:17:09 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/25 18:53:30 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,6 +147,18 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
                 server.listenPort = ftToInt(addr);
             }
         }
+        else if (token == "server_name")
+        {
+            std::string value;
+            std::getline(input, value, ';');
+
+            size_t start = value.find_first_not_of(" \t");
+            size_t end   = value.find_last_not_of(" \t");
+            if (start != std::string::npos)
+                value = value.substr(start, end - start + 1);
+
+            server.serverNames = value;
+        }
         else if (token == "root")
         {
             std::string value;
@@ -154,7 +166,7 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
             size_t start = value.find_first_not_of(" \t");
             size_t end   = value.find_last_not_of(" \t");
             if (start != std::string::npos) value = value.substr(start, end - start + 1);
-            server.root = value;
+                server.root = value;
         }
         else if (token == "index")
         {

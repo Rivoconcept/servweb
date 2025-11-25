@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/01 11:01:26 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/25 19:04:24 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,18 +21,11 @@
 #include "../include/utils.hpp"
 #include <fcntl.h>
 
-// Forward declarations (should be in utils.hpp; added here to ensure visibility)
-std::string normalizeRelativePath(const std::string &relative);
-bool isPathInsideRoot(const std::string &root, const std::string &target, std::string &outCanonicalTarget);
-bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
-
-
 Server::Server(const HttpConfig &config, MimeTypes &types)
     : _config(config), _mimeTypes(types)
 {
     setupListeningSockets();
 }
-
 
 Server::~Server()
 {

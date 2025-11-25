@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,7 +34,7 @@
   </nav>
   <div class="container mt-4">
     <form action="/uploads" method="POST" enctype="multipart/form-data">
-
+      
       <h5 class="mb-3">État Civil</h5>
 
       <div class="mb-3">
