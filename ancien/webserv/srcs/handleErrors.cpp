@@ -12,6 +12,7 @@
 
 #include "../include/handleErrors.hpp"
 #include <sys/socket.h>
+#include <unistd.h>
 
 std::map<int, std::string> HandleErrors::initReasonMap() {
     std::map<int, std::string> reasons;
@@ -98,7 +99,8 @@ std::string HandleErrors::generateErrorResponse(
     return oss.str();
 }
 
-void HandleErrors::sendError(int client_fd, int code, const ServerConfig &serverConf, const LocationConfig *locationConf, const std::string &extraHeaders)
+void HandleErrors::sendError(int client_fd, int code, const ServerConfig &serverConf, 
+    const LocationConfig *locationConf, const std::string &extraHeaders)
 {
     std::string resp = generateErrorResponse(code, serverConf, locationConf, extraHeaders);
     sendResponse(client_fd, resp);
@@ -106,13 +108,15 @@ void HandleErrors::sendError(int client_fd, int code, const ServerConfig &server
 
 void HandleErrors::sendResponse(int client_fd, const std::string &response)
 {
-    if (client_fd < 0) {
-        std::cerr << "HandleErrors::sendResponse: client_fd invalide (" << client_fd << ")\n";
+    if (client_fd < 0)
         return;
-    }
-    ssize_t sent = ::send(client_fd, response.c_str(), response.size(), 0);
-    if (sent == -1) {
-        std::cerr << "HandleErrors::sendResponse: send failed for fd " << client_fd << " errno=" << errno << "\n";
+    // Attempt a single non-blocking send. Per project rules, do not
+    // branch based on errno after send; the server is responsible for
+    // using poll() and handling retries via its own mechanism.
+    ssize_t n = ::send(client_fd, response.c_str(), response.size(), 0);
+    if (n <= 0) {
+        ::close(client_fd);
+        return;
     }
 }
 
