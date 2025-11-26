@@ -3,14 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   handleCGI.cpp                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:48:25 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/22 19:28:23 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/26 15:38:33 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/handleCGI.hpp"
+#include <fcntl.h>
+#include <unistd.h>
 
 HandleCGI::HandleCGI(const HttpRequest& req, const ServerConfig& serverConf, const LocationConfig& locationConf)
     : _request(req), _serverConf(serverConf), _locationConf(locationConf) {}
@@ -62,12 +64,25 @@ std::string HandleCGI::execute()
 {
     int pipe_out[2]; // pour stdout/stderr du CGI -> parent lit pipe_out[0]
     int pipe_in[2];  // pour stdin du CGI <- parent écrit pipe_in[1]
-    if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1)
+    if (pipe(pipe_out) == -1 || pipe(pipe_in) == -1) {
         throw std::runtime_error("pipe failed");
+    }
+
+    // Set pipes to non-blocking mode
+    int flags = fcntl(pipe_out[0], F_GETFL, 0);
+    fcntl(pipe_out[0], F_SETFL, flags | O_NONBLOCK);
+    flags = fcntl(pipe_in[1], F_GETFL, 0);
+    fcntl(pipe_in[1], F_SETFL, flags | O_NONBLOCK);
 
     pid_t pid = fork();
-    if (pid < 0)
+    if (pid < 0) {
+        // Clean up pipes before throwing
+        close(pipe_out[0]);
+        close(pipe_out[1]);
+        close(pipe_in[0]);
+        close(pipe_in[1]);
         throw std::runtime_error("fork failed");
+    }
 
     if (pid == 0) // child
     {
@@ -77,11 +92,20 @@ std::string HandleCGI::execute()
         close(pipe_in[1]);  // child n'a pas besoin de write end for stdin
 
         // redirect stdout & stderr -> pipe_out[1]
-        if (dup2(pipe_out[1], STDOUT_FILENO) == -1) perror("dup2 stdout");
-        if (dup2(pipe_out[1], STDERR_FILENO) == -1) perror("dup2 stderr");
+        if (dup2(pipe_out[1], STDOUT_FILENO) == -1) {
+            perror("dup2 stdout");
+            _exit(127);
+        }
+        if (dup2(pipe_out[1], STDERR_FILENO) == -1) {
+            perror("dup2 stderr");
+            _exit(127);
+        }
 
         // redirect stdin <- pipe_in[0]
-        if (dup2(pipe_in[0], STDIN_FILENO) == -1) perror("dup2 stdin");
+        if (dup2(pipe_in[0], STDIN_FILENO) == -1) {
+            perror("dup2 stdin");
+            _exit(127);
+        }
 
         // close now duplicated fds
         close(pipe_out[1]);
@@ -125,6 +149,9 @@ std::string HandleCGI::execute()
         close(pipe_out[1]);
         close(pipe_in[0]);
 
+        std::string output;
+        bool writeError = false;
+
         // Si la requête a un body (POST), on l'envoie au stdin du child
         if (!_request.body.empty()) {
             ssize_t toWrite = _request.body.size();
@@ -132,29 +159,42 @@ std::string HandleCGI::execute()
             while (toWrite > 0) {
                 ssize_t w = write(pipe_in[1], data, toWrite);
                 if (w <= 0) {
-                    if (errno == EINTR) continue;
+                    std::cerr << "handleCGI: write to child returned <= 0, aborting\n";
+                    writeError = true;
                     break;
                 }
                 toWrite -= w;
                 data += w;
             }
         }
-        // fermer la pipe stdin pour indiquer EOF au child
+        // fermer la pipe stdin pour indiquer EOF au child (même en cas d'erreur)
         close(pipe_in[1]);
 
         // Lire la sortie du child
-        std::string output;
         char buffer[4096];
-        ssize_t n;
-        while ((n = read(pipe_out[0], buffer, sizeof(buffer))) > 0) {
-            output.append(buffer, n);
-            // Optionnel : envoyer directement au client ici plutôt que stocker
+        for (;;) {
+            ssize_t n = read(pipe_out[0], buffer, sizeof(buffer));
+            if (n > 0) {
+                output.append(buffer, n);
+                continue;
+            }
+            if (n == 0) {
+                // EOF
+                break;
+            }
+            // n < 0 : error
+            std::cerr << "handleCGI: read from child returned < 0, aborting\n";
+            break;
         }
         close(pipe_out[0]);
 
         // Reaper le child
         int status = 0;
         waitpid(pid, &status, 0);
+
+        if (writeError) {
+            throw std::runtime_error("handleCGI: write to child failed");
+        }
 
         return output;
     }
@@ -211,9 +251,16 @@ std::string HandleCGI::execute()
 
         char buffer[1024];
         std::string output;
-        ssize_t n;
-        while ((n = read(pipefd[0], buffer, sizeof(buffer))) > 0)
-            output.append(buffer, n);
+        for (;;) {
+            ssize_t n = read(pipefd[0], buffer, sizeof(buffer));
+            if (n > 0) {
+                output.append(buffer, n);
+                continue;
+            }
+            if (n == 0) break;
+            std::cerr << "handleCGI: read from pipe returned < 0, aborting\n";
+            break;
+        }
         close(pipefd[0]);
 
         int status;

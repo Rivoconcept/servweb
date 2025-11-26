@@ -1,32 +1,19 @@
-nohup: ignoring input
-Listening on 127.0.0.1:8080
-Listening on 0.0.0.0:8081
-Listening on 192.168.1.10:8082
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/index.html'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/index.html'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1' relativePath='webserv.png' uri='/webserv.png' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/webserv.png'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/webserv.png'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/servers' relativePath='sass/style.css' uri='/bootstrap/sass/style.css' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/servers/sass/style.css'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/servers/sass/style.css'
-responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servweb/webserv/servers/bootstrap/sass/style.css'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1' relativePath='script.js' uri='/script.js' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/script.js'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/script.js'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/index.html'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/index.html'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1' relativePath='webserv.png' uri='/webserv.png' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/webserv.png'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/webserv.png'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/servers' relativePath='sass/style.css' uri='/bootstrap/sass/style.css' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/servers/sass/style.css'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/servers/sass/style.css'
-responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servweb/webserv/servers/bootstrap/sass/style.css'
-New client 6 attached to server listening on port 8080
-[DEBUG] root='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1' relativePath='script.js' uri='/script.js' filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/script.js'
-responseBuilder: candidate filePath='/home/rivoinfo/Documents/DEV/servweb/webserv/clients/www1/script.js'
-New client 6 attached to server listening on port 8080
-New client 6 attached to server listening on port 8080
+Pour tester que les error_page fonctionnent correctement, tu dois :
+
+Créer les fichiers d'erreur aux chemins spécifiés :
+Tester un 404 (page qui n'existe pas) :
+
+curl http://127.0.0.1:8080/nonexistent
+
+Tu devrais voir le contenu de /errors/404.html.
+
+Tester un 500 (forcer une erreur serveur, par exemple avec un CGI qui échoue) :
+
+curl http://127.0.0.1:8080/cgi_bin/invalid.php
+
+Si le CGI n'existe pas ou échoue, tu devrais voir /errors/500.html.
+
+Vérifier les headers pour confirmer qu'ils ont le bon content-type :
+curl -i http://127.0.0.1:8080/nonexistent
+
+Les chemins dans ta config pointent à /home/rhanitra/GITHUB/servweb/webserv/servers/server/errors/ mais tes chemins réels semblent être dans webserv. C'est probablement le problème - les chemins dans la config ne correspondent pas à ta structure réelle !

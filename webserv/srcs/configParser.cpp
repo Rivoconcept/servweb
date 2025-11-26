@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   configParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/25 18:53:30 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/26 13:35:48 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,15 +149,14 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
         }
         else if (token == "server_name")
         {
-            std::string value;
-            std::getline(input, value, ';');
+            std::string line;
+            std::getline(input, line, ';');
 
-            size_t start = value.find_first_not_of(" \t");
-            size_t end   = value.find_last_not_of(" \t");
-            if (start != std::string::npos)
-                value = value.substr(start, end - start + 1);
+            std::stringstream ss(line);
+            std::string name;
 
-            server.serverNames = value;
+            while (ss >> name)
+                server.serverNames.push_back(name);
         }
         else if (token == "root")
         {

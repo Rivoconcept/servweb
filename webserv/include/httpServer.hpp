@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpServer.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/25 17:37:29 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/26 13:53:35 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,8 +48,9 @@ class Server
         const HttpConfig &_config;
         std::vector<struct pollfd> _fds;
         std::vector<int> _clientSockets;
-        std::map<int, const ServerConfig*> _listenSockets;
+        std::map<int, std::vector<const ServerConfig*> > _listenSockets;
         std::map<int, const ServerConfig*> _clientToServer;
+        std::map<int, int> _clientToListenSocket;  // map client_fd -> listening_socket_fd
         MimeTypes &_mimeTypes;
         
         // Outgoing send buffers for non-blocking writes
