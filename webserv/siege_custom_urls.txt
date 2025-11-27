@@ -1,2 +1,0 @@
-# URLs used by siege for webserv empty page test
-http://localhost:8080/
