@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:47:11 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 14:15:02 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/11/27 13:27:34 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ class HandleCGI
 
         void printEnv() const;
         void buildEnv();
-        std::vector<char*> buildEnvArray() const;
+        std::vector<std::string> buildEnvStrings() const;
         std::string execute();
 };
 

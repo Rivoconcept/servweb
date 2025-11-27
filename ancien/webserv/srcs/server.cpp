@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/01 11:01:26 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/26 15:46:11 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,18 +21,11 @@
 #include "../include/utils.hpp"
 #include <fcntl.h>
 
-// Forward declarations (should be in utils.hpp; added here to ensure visibility)
-std::string normalizeRelativePath(const std::string &relative);
-bool isPathInsideRoot(const std::string &root, const std::string &target, std::string &outCanonicalTarget);
-bool checkClientMaxBodySize(size_t contentLength, size_t clientMaxBodySize);
-
-
 Server::Server(const HttpConfig &config, MimeTypes &types)
     : _config(config), _mimeTypes(types)
 {
     setupListeningSockets();
 }
-
 
 Server::~Server()
 {
@@ -44,11 +37,21 @@ Server::~Server()
 
 void Server::setupListeningSockets()
 {
-    for (size_t i = 0; i < _config.servers.size(); ++i)
-    {
+    // Grouper les serveurs par (host, port) pour créer UNE socket par endpoint
+    std::map<std::pair<std::string, int>, std::vector<size_t> > serversByEndpoint;
+    for (size_t i = 0; i < _config.servers.size(); ++i) {
+        std::pair<std::string, int> endpoint(_config.servers[i].host, _config.servers[i].listenPort);
+        serversByEndpoint[endpoint].push_back(i);
+    }
+    
+    // Pour chaque endpoint unique, créer une socket et y ajouter tous les serveurs
+    for (std::map<std::pair<std::string, int>, std::vector<size_t> >::iterator it = serversByEndpoint.begin();
+         it != serversByEndpoint.end(); ++it) {
+        const std::pair<std::string, int> &endpoint = it->first;
+        const std::vector<size_t> &serverIndices = it->second;
+        
         int sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (sock == -1)
-        {
+        if (sock == -1) {
             std::cerr << "Error: socket init failed\n";
             continue;
         }
@@ -58,39 +61,37 @@ void Server::setupListeningSockets()
 
         sockaddr_in addr;
         addr.sin_family = AF_INET;
-        addr.sin_addr.s_addr = INADDR_ANY; // TODO: convertir host string en in_addr
-        addr.sin_port = htons(_config.servers[i].listenPort);
+        addr.sin_addr.s_addr = INADDR_ANY;
+        addr.sin_port = htons(endpoint.second);
 
-        if (bind(sock, (sockaddr*)&addr, sizeof(addr)) == -1)
-        {
-            std::cerr << "Error: bind failed on port " << _config.servers[i].listenPort
+        if (bind(sock, (sockaddr*)&addr, sizeof(addr)) == -1) {
+            std::cerr << "Error: bind failed on port " << endpoint.second
                       << " (errno=" << errno << ") " << strerror(errno) << "\n";
             close(sock);
             continue;
         }
 
-        if (listen(sock, MAX_PENDING_QUEUE) == -1)
-        {
-            std::cerr << "Error: listen failed on port " << _config.servers[i].listenPort
+        if (listen(sock, MAX_PENDING_QUEUE) == -1) {
+            std::cerr << "Error: listen failed on port " << endpoint.second
                       << " (errno=" << errno << ") " << strerror(errno) << "\n";
             close(sock);
             continue;
         }
 
-    // set non-blocking
-    int flags = fcntl(sock, F_GETFL, 0);
-    fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-    struct pollfd pfd;
-    pfd.fd = sock;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-    _fds.push_back(pfd);
+        int flags = fcntl(sock, F_GETFL, 0);
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+        struct pollfd pfd;
+        pfd.fd = sock;
+        pfd.events = POLLIN;
+        pfd.revents = 0;
+        _fds.push_back(pfd);
 
-        // 👇 Ici : association socket d'écoute ↔ config serveur
-        _listenSockets[sock] = &_config.servers[i];
-
-        std::cout << "Listening on " << _config.servers[i].host 
-                << ":" << _config.servers[i].listenPort << std::endl;
+        // Ajouter TOUS les serveurs de cet endpoint
+        for (size_t j = 0; j < serverIndices.size(); ++j) {
+            _listenSockets[sock].push_back(&_config.servers[serverIndices[j]]);
+        }
+        
+        std::cout << "Listening on " << endpoint.first << ":" << endpoint.second << std::endl;
     }
 }
 
@@ -99,8 +100,10 @@ void Server::handleNewConnection(size_t index)
     sockaddr_in client_addr;
     socklen_t addrlen = sizeof(client_addr);
     int client_sock = accept(_fds[index].fd, (sockaddr*)&client_addr, &addrlen);
-    if (client_sock != -1)
-    {
+    if (client_sock == -1) {
+        std::cerr << "Error: accept failed (errno=" << errno << ")\n";
+        return;
+    }
     // set client socket non-blocking
     int flags = fcntl(client_sock, F_GETFL, 0);
     fcntl(client_sock, F_SETFL, flags | O_NONBLOCK);
@@ -116,17 +119,20 @@ void Server::handleNewConnection(size_t index)
         _clients[client_sock].lastActivity = now;
         _clients[client_sock].createdAt = now;
 
-        // Vérifie que le fd d’écoute est bien dans la map
+        // Stocker le socket d'écoute pour choisir le serveur plus tard
+        // On va stocker l'index du fd d'écoute dans une map temporaire
+        // pour retrouver la liste des serveurs possibles
         if (_listenSockets.count(_fds[index].fd)) {
-            _clientToServer[client_sock] = _listenSockets[_fds[index].fd];
+            // On ne choisit pas le serveur maintenant
+            // On laissera handleClientData() le faire selon le header Host:
+            _clientToServer[client_sock] = NULL;  // À déterminer plus tard
+            _clientToListenSocket[client_sock] = _fds[index].fd;  // Stocker le listen fd
             std::cout << "New client " << client_sock 
-                      << " attached to server listening on port "
-                      << _listenSockets[_fds[index].fd]->listenPort << std::endl;
+                      << " connected (server selection pending Host: header)\n";
         } else {
             std::cerr << "Error: listening socket " << _fds[index].fd 
                       << " not found in _listenSockets!" << std::endl;
         }
-    }
 }
 
 
@@ -253,6 +259,83 @@ void Server::handleClientData(size_t index)
         return;
     }
 
+    // 🔹 SI le serveur n'est pas encore choisi, le choisir maintenant selon le Host: header
+    // Mais d'abord, faire un parsing préliminaire des headers pour extraire le Host
+    if (!_clientToServer[client_fd]) {
+        if (_clientToListenSocket.count(client_fd) == 0) {
+            std::cerr << "Error: client " << client_fd << " has no listen socket mapping\n";
+            return;
+        }
+        
+        int listen_fd = _clientToListenSocket[client_fd];
+        const std::vector<const ServerConfig*> &candidates = _listenSockets[listen_fd];
+        
+        if (candidates.empty()) {
+            std::cerr << "Error: no server available on listen socket " << listen_fd << "\n";
+            return;
+        }
+        
+        // Extraire le Host header pour le matching
+        std::string requestHost;
+        size_t hostPos = state.readBuffer.find("Host:");
+        if (hostPos != std::string::npos) {
+            size_t hostStart = hostPos + 5;
+            while (hostStart < state.readBuffer.size() && (state.readBuffer[hostStart] == ' ' || state.readBuffer[hostStart] == '\t'))
+                hostStart++;
+            size_t hostEnd = state.readBuffer.find("\r\n", hostStart);
+            if (hostEnd != std::string::npos) {
+                requestHost = state.readBuffer.substr(hostStart, hostEnd - hostStart);
+                // Extraire juste le hostname (supprimer port si présent)
+                size_t colonPos = requestHost.find(':');
+                if (colonPos != std::string::npos)
+                    requestHost = requestHost.substr(0, colonPos);
+            }
+        }
+        
+        // Chercher un serveur avec un matching server_name
+        const ServerConfig* selectedServer = NULL;
+        std::string matchedName;
+        for (size_t i = 0; i < candidates.size(); ++i) {
+            const ServerConfig *conf = candidates[i];
+            for (size_t j = 0; j < conf->serverNames.size(); ++j) {
+                if (conf->serverNames[j] == requestHost) {
+                    selectedServer = conf;
+                    matchedName = conf->serverNames[j];
+                    break;
+                }
+            }
+            if (selectedServer) break;
+        }
+        
+        // Si aucun match → premier serveur de la liste (default)
+        if (!selectedServer && !candidates.empty()) {
+            selectedServer = candidates[0];
+            if (matchedName.empty()) matchedName = "(default)";
+            if (!requestHost.empty()) {
+                std::cout << "No matching server_name for '" << requestHost 
+                          << "', using default server (port " 
+                          << selectedServer->listenPort << ")\n";
+            }
+        }
+        
+        if (!selectedServer) {
+            std::cerr << "Error: no server available on listen socket " << listen_fd << "\n";
+            return;
+        }
+        
+        _clientToServer[client_fd] = selectedServer;
+        std::cout << "Client " << client_fd << " assigned to server '" << matchedName
+              << "' on port " << selectedServer->listenPort << "\n";
+    }
+
+    // Maintenant qu'on a un serveur assigné, on peut parser la requête
+    // et envoyer des erreurs appropriées si nécessaire
+    const ServerConfig *serverConf = _clientToServer[client_fd];
+    if (!serverConf) {
+        std::cerr << "Error: no server config found for client " << client_fd << "\n";
+        return;
+    }
+
     // Check if Transfer-Encoding: chunked is present
     bool isChunked = false;
     size_t tePos = state.readBuffer.find("Transfer-Encoding:");
@@ -333,13 +416,6 @@ void Server::handleClientData(size_t index)
         state.readBuffer.clear();
         return;
     }
-    // 🔹 Récupérer la config du serveur associé
-    const ServerConfig *serverConf = _clientToServer[client_fd];
-    if (!serverConf) {
-        std::cerr << "Error: no server config found for client " << client_fd << "\n";
-        return;
-    }
-
 
     // 🔹 Trouver la meilleure location
     const LocationConfig* locationConf = NULL;
@@ -372,7 +448,13 @@ void Server::handleClientData(size_t index)
         allowed.insert("DELETE");
     }
 
-        if (allowed.find(req.method) == allowed.end()) {
+    // Vérifier que la méthode est valide (non vide)
+    if (req.method.empty()) {
+        queueResponse(client_fd, HandleErrors::generateErrorResponse(400, *serverConf, locationConf));
+        return;
+    }
+
+    if (allowed.find(req.method) == allowed.end()) {
         queueResponse(client_fd, HandleErrors::generateErrorResponse(405, *serverConf, locationConf, "Allow: GET, POST, DELETE\r\n"));
         return;
     }
@@ -613,6 +695,7 @@ void Server::closeClient(size_t index)
         if (*it == fd) { _clientSockets.erase(it); break; }
     }
     _clientToServer.erase(fd);
+    _clientToListenSocket.erase(fd);
     _clients.erase(fd);
     _sendBuffers.erase(fd);
     _closeAfterSend.erase(fd);

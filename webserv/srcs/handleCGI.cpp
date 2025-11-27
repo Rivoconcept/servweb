@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:48:25 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/26 15:38:33 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/11/27 13:27:56 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,7 @@ void HandleCGI::buildEnv()
 
 }
 
-std::vector<char*> HandleCGI::buildEnvArray() const
+std::vector<std::string> HandleCGI::buildEnvStrings() const
 {
     std::vector<std::string> envStrings;
     for (std::map<std::string, std::string>::const_iterator it = _env.begin();
@@ -51,13 +51,7 @@ std::vector<char*> HandleCGI::buildEnvArray() const
     {
         envStrings.push_back(it->first + "=" + it->second);
     }
-
-    std::vector<char*> envp;
-    for (size_t i = 0; i < envStrings.size(); ++i)
-        envp.push_back(const_cast<char*>(envStrings[i].c_str()));
-    envp.push_back(NULL);
-
-    return envp;
+    return envStrings;
 }
 
 std::string HandleCGI::execute()
@@ -90,10 +84,8 @@ std::string HandleCGI::execute()
         close(pipe_in[0]);
 
         // --- Construire envp ---
-        std::vector<std::string> envStrings;
-        std::vector<char*> envp;
-        for (std::map<std::string,std::string>::const_iterator it = _env.begin(); it != _env.end(); ++it)
-            envStrings.push_back(it->first + "=" + it->second);
+        // Build std::string vector first so the data remains valid until execve()
+        std::vector<std::string> envStrings = buildEnvStrings();
 
         // s'assurer de REDIRECT_STATUS=200
         bool hasRedirect = false;
@@ -102,6 +94,7 @@ std::string HandleCGI::execute()
         }
         if (!hasRedirect) envStrings.push_back("REDIRECT_STATUS=200");
 
+        std::vector<char*> envp;
         envp.reserve(envStrings.size() + 1);
         for (size_t i = 0; i < envStrings.size(); ++i)
             envp.push_back(const_cast<char*>(envStrings[i].c_str()));

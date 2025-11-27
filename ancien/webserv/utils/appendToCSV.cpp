@@ -75,9 +75,8 @@ void appendToCSV(const std::map<std::string, std::string> &fields,
     ssize_t written = 0;
     while (written < toWrite) {
         ssize_t w = write(fd, buf + written, toWrite - written);
-        if (w < 0) {
-            if (errno == EINTR) continue;
-            std::cerr << "appendToCSV: write failed errno=" << errno << "\n";
+        if (w <= 0) {
+            std::cerr << "appendToCSV: write returned <= 0, aborting\n";
             break;
         }
         written += w;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   configParser.cpp                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
+/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/09/16 17:17:09 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/11/27 15:40:20 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,6 +147,17 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
                 server.listenPort = ftToInt(addr);
             }
         }
+        else if (token == "server_name")
+        {
+            std::string line;
+            std::getline(input, line, ';');
+
+            std::stringstream ss(line);
+            std::string name;
+
+            while (ss >> name)
+                server.serverNames.push_back(name);
+        }
         else if (token == "root")
         {
             std::string value;
@@ -154,7 +165,7 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
             size_t start = value.find_first_not_of(" \t");
             size_t end   = value.find_last_not_of(" \t");
             if (start != std::string::npos) value = value.substr(start, end - start + 1);
-            server.root = value;
+                server.root = value;
         }
         else if (token == "index")
         {
@@ -241,6 +252,24 @@ HttpConfig ConfigParser::parse()
         }
         else throw std::runtime_error("Unexpected token at root level: " + token);
     }
+
+    // Validate: check for duplicate (host, port) pairs
+    std::map<std::pair<std::string, int>, int> endpointCount;
+    for (size_t i = 0; i < httpConfig.servers.size(); ++i)
+    {
+        std::pair<std::string, int> endpoint(httpConfig.servers[i].host, httpConfig.servers[i].listenPort);
+        endpointCount[endpoint]++;
+        if (endpointCount[endpoint] > 1)
+        {
+            std::string errMsg = "Error: Duplicate listen address ";
+            errMsg += httpConfig.servers[i].host;
+            errMsg += ":";
+            errMsg += ftToString(httpConfig.servers[i].listenPort);
+            errMsg += " found in configuration";
+            throw std::runtime_error(errMsg);
+        }
+    }
+
     return httpConfig;
 }
 

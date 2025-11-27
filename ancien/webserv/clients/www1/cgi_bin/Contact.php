@@ -1,7 +1,3 @@
-<?php
-// Tu peux ajouter un traitement PHP en haut si besoin (ex: $_POST)
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,8 +33,7 @@
   </nav>
   <div class="container mt-4">
     <form action="/uploads" method="POST" enctype="multipart/form-data">
-      
-      <!-- État Civil -->
+
       <h5 class="mb-3">État Civil</h5>
 
       <div class="mb-3">
@@ -79,7 +74,6 @@
         </div>
       </div>
 
-      <!-- Contact -->
       <h5 class="mt-4 mb-3">Contact</h5>
       <div class="row mb-3">
         <div class="col-sm-6">
@@ -92,27 +86,23 @@
         </div>
       </div>
 
-      <!-- Attachment -->
       <h5 class="mt-4 mb-3">Attachment</h5>
       <div class="mb-3">
         <label for="inputCv" class="form-label">Browse CV here</label>
         <input type="file" class="form-control" name="cv" id="inputCv">
       </div>
 
-      <!-- Contract -->
       <h5 class="mt-4 mb-3">Contract</h5>
       <div class="form-check mb-3">
         <input class="form-check-input" type="checkbox" name="contract" id="inputContract" checked>
         <label class="form-check-label" for="inputContract">I accept the terms of use</label>
       </div>
 
-      <!-- Additional Information -->
       <h5 class="mt-4 mb-3">Additional information (optional)</h5>
       <div class="mb-3">
         <textarea class="form-control" name="information" id="inputInfo" rows="5" placeholder="Your message"></textarea>
       </div>
 
-      <!-- Buttons -->
       <div class="d-flex gap-2 mt-3">
         <button type="submit" class="btn btn-primary">Post information</button>
         <button type="reset" class="btn btn-secondary">Cancel</button>
@@ -121,7 +111,6 @@
     </form>
   </div>
 
-<!-- JS Bootstrap (optionnel) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

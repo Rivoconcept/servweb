@@ -1,0 +1,163 @@
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34mTESTS DE FUITES MÉMOIRE - WEBSERV (FOCUS CGI)[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+
+[0;34m── TEST 1: Requêtes simples avec Valgrind (30s) ──[0m
+Listening on 127.0.0.1:8080
+Listening on 127.0.0.1:8081
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+[0;32m✓ Test 1 terminé[0m
+
+[0;34m── TEST 2: CGI GET/POST avec Valgrind (30s) ──[0m
+Listening on 127.0.0.1:8080
+Listening on 127.0.0.1:8081
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=5' uri='/cgi_bin/test.php?id=5' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=5'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=5'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=10' uri='/cgi_bin/test.php?id=10' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=10'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=10'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=4' uri='/cgi_bin/test.php?id=4' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=4'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=4'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=3' uri='/cgi_bin/test.php?id=3' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=3'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=3'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=8' uri='/cgi_bin/test.php?id=8' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=8'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=8'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=2' uri='/cgi_bin/test.php?id=2' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=2'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=2'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=9' uri='/cgi_bin/test.php?id=9' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=9'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=9'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=1' uri='/cgi_bin/test.php?id=1' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=1'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=1'
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=7' uri='/cgi_bin/test.php?id=7' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=7'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=7'
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin' relativePath='/test.php?id=6' uri='/cgi_bin/test.php?id=6' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin//test.php?id=6'
+responseBuilder: trying altPath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/cgi_bin/cgi_bin/test.php?id=6'
+[0;32m✓ Test 2 terminé[0m
+
+[0;34m── TEST 3: POST volumineux + CGI avec Valgrind (30s) ──[0m
+Listening on 127.0.0.1:8080
+Listening on 127.0.0.1:8081
+New client 6 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 6 assigned to server '(default)' on port 8080
+New client 7 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 7 assigned to server '(default)' on port 8080
+New client 8 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 8 assigned to server '(default)' on port 8080
+New client 9 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 9 assigned to server '(default)' on port 8080
+New client 10 connected (server selection pending Host: header)
+No matching server_name for 'localhost', using default server (port 8080)
+Client 10 assigned to server '(default)' on port 8080
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+[DEBUG] root='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1' relativePath='index.html' uri='/' filePath='/home/rivoinfo/Documents/DEV/servwebs/webserv/clients/www1/index.html'
+[0;32m✓ Test 3 terminé[0m
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;34mRÉSULTATS VALGRIND[0m
+[0;34m═══════════════════════════════════════════════════════════[0m
+
+[1;33m── valgrind_simple.log ──[0m
+[0;32m✓ Aucune erreur détectée[0m
+[1;33mFuites mémoire:[0m
+==103366==    definitely lost: 0 bytes in 0 blocks
+==103366==    indirectly lost: 0 bytes in 0 blocks
+==103366==      possibly lost: 0 bytes in 0 blocks
+[1;33mAllocations:[0m
+==103366==   total heap usage: 1,023 allocs, 810 frees, 420,586 bytes allocated
+
+[1;33m── valgrind_cgi.log ──[0m
+[0;32m✓ Aucune erreur détectée[0m
+[1;33mFuites mémoire:[0m
+==103620==    definitely lost: 0 bytes in 0 blocks
+==103620==    indirectly lost: 0 bytes in 0 blocks
+==103620==      possibly lost: 0 bytes in 0 blocks
+[1;33mAllocations:[0m
+==103620==   total heap usage: 1,023 allocs, 810 frees, 187,116 bytes allocated
+
+[1;33m── valgrind_large.log ──[0m
+[0;32m✓ Aucune erreur détectée[0m
+[1;33mFuites mémoire:[0m
+==103928==    definitely lost: 0 bytes in 0 blocks
+==103928==    indirectly lost: 0 bytes in 0 blocks
+==103928==      possibly lost: 0 bytes in 0 blocks
+[1;33mAllocations:[0m
+==103928==   total heap usage: 886 allocs, 673 frees, 1,938,208 bytes allocated
+
+[0;34m═══════════════════════════════════════════════════════════[0m
+[0;32mTests terminés![0m
+[0;34m═══════════════════════════════════════════════════════════[0m
