@@ -16,12 +16,6 @@
 #include "httpConfig.hpp"
 #include "httpRequest.hpp"
 #include "httpServer.hpp"
-
-class ServerConfig;
-class LocationConfig;
-class HttpRequest;
-
-
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -31,9 +25,9 @@ class HttpRequest;
 #include <cstring>
 #include <map>
 
-class HttpRequest;
-class ServerConfig;
-class LocationConfig;
+struct HttpRequest;
+struct ServerConfig;
+struct LocationConfig;
 
 template <typename T>
 std::string ftToString(T value)

@@ -20,8 +20,8 @@
 #include <iostream>
 #include "httpConfig.hpp"
 
-class ServerConfig;
-class LocationConfig;
+struct ServerConfig;
+struct LocationConfig;
 
 class HandleErrors
 {

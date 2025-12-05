@@ -29,11 +29,11 @@
 #include <string>
 #include <csignal>
 
-class HttpConfig; 
-class ServerConfig;
-class LocationConfig;
-class MimeTypes;
-class HttpRequest;
+struct HttpConfig; 
+struct ServerConfig;
+struct LocationConfig;
+struct MimeTypes;
+struct HttpRequest;
 class HttpResponseBuilder;
 class HandleErrors;
 

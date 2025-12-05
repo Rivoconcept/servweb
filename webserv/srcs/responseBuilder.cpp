@@ -88,7 +88,13 @@ std::string HttpResponseBuilder::buildResponse(
         {
             HandleCGI cgi(req, serverConf, locationConf);
             cgi.buildEnv();
-            std::string cgiOutput = cgi.execute();
+            std::string cgiOutput;
+            try {
+                cgiOutput = cgi.execute();
+            } catch (const std::exception &e) {
+                std::cerr << "CGI execution error: " << e.what() << std::endl;
+                return HandleErrors::generateErrorResponse(500, serverConf, &locationConf);
+            }
 
             size_t pos = cgiOutput.find("\r\n\r\n");
             if (pos != std::string::npos) {
