@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   httpServer.hpp                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
+/*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:37:39 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/26 13:53:35 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/12/07 10:59:44 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,11 @@
 #include <string>
 #include <csignal>
 
-class HttpConfig; 
-class ServerConfig;
-class LocationConfig;
-class MimeTypes;
-class HttpRequest;
+struct HttpConfig; 
+struct ServerConfig;
+struct LocationConfig;
+struct MimeTypes;
+struct HttpRequest;
 class HttpResponseBuilder;
 class HandleErrors;
 

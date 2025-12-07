@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/29 16:22:27 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/25 17:38:56 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/12/07 11:00:06 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,6 @@
 #include "httpConfig.hpp"
 #include "httpRequest.hpp"
 #include "httpServer.hpp"
-
-class ServerConfig;
-class LocationConfig;
-class HttpRequest;
-
-
 #include <stdexcept>
 #include <string>
 #include <sstream>
@@ -31,9 +25,9 @@ class HttpRequest;
 #include <cstring>
 #include <map>
 
-class HttpRequest;
-class ServerConfig;
-class LocationConfig;
+struct ServerConfig;
+struct LocationConfig;
+struct HttpRequest;
 
 template <typename T>
 std::string ftToString(T value)

@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:25:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/12/07 13:10:26 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/12/07 12:58:28 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -443,9 +443,10 @@ void Server::handleClientData(size_t index)
     if (locationConf && !locationConf->methods.empty()) {
         allowed.insert(locationConf->methods.begin(), locationConf->methods.end());
     } else {
-        allowed.insert("GET");
+        /home/rhanitra/GITHUB/servweb/webserv
         allowed.insert("POST");
         allowed.insert("DELETE");
+        allowed.insert("HEAD");
     }
 
     // Vérifier que la méthode est valide (non vide)

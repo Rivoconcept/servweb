@@ -1,7 +1,0 @@
-Start loop...
-tick
-tick
-tick
-tick
-tick
-Done
