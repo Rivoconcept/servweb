@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 13:30:58 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/25 18:57:48 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/12/21 15:29:29 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,24 +39,26 @@ struct LocationConfig
     std::string returnPath;
     std::string cgiExtension;
     std::string cgiPath;
-    // per-location CGI timeout in seconds. 0 means use server default (10s here)
+    
     int cgiTimeoutSeconds;
     std::string uploadDir;
     std::string defaultFile;
     std::map<std::string,std::string> directives;
+
+    size_t clientMaxBodySize;
 
     LocationConfig() : autoindex(false), returnCode(0), cgiTimeoutSeconds(0) {}
 };
 
 struct ServerConfig
 {
-    std::string host;
-    int listenPort;
-    std::vector<std::string> serverNames;
-    std::string root;
-    std::vector<std::string> indexFiles;
-    size_t clientMaxBodySize;
-    std::map<int,std::string> errorPages;
+    std::string                 host;
+    int                         listenPort;
+    std::vector<std::string>    serverNames;
+    std::string                 root;
+    std::vector<std::string>    indexFiles;
+    size_t                      clientMaxBodySize;
+    std::map<int,std::string>   errorPages;
     std::vector<LocationConfig> locations;
 
     ServerConfig() : listenPort(0), clientMaxBodySize(0) {}
@@ -73,13 +75,22 @@ class ConfigParser
         std::string _configFilePath;
         std::string _mimeTypesPath;
         std::string _fileContent;
-        // MimeTypes &_mineTypes;
+
         
         
         void expectToken(std::istream &input, const std::string &expected);
         void parseHttpBlock(std::istream &input, HttpConfig &httpConfig);
         void parseServerBlock(std::istream &input, ServerConfig &config);
         void parseLocationBlock(std::istream &input, LocationConfig &loc);
+        void formalizeSpaces(std::string &line);
+        void findMissingSemicolon(const std::string &text);
+        void checkBraces(const std::string &text);
+        void eraseClosingBraces(std::string &s);
+
+        bool isValidPortNumber(const std::string &portStr);
+        bool isValidHostname(const std::string &hostname);
+        bool isValidBodySize(const std::string &sizeStr);
+        bool isValidIPAddress(const std::string &ip);
 
     public:
         ConfigParser(const std::string &_configFilePath, const std::string &mimeTypesPath);

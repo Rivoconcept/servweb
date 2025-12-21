@@ -20,9 +20,10 @@ std::map<int, std::string> HandleErrors::initReasonMap() {
     reasons[403] = "Forbidden";
     reasons[404] = "Not Found";
     reasons[405] = "Method Not Allowed";
+    reasons[408] = "Request Timeout";
     reasons[413] = "Payload Too Large";
     reasons[500] = "Internal Server Error";
-    reasons[501] = "Not Implemented";
+    reasons[505] = "HTTP Version Not Supported";
     return reasons;
 }
 
@@ -33,12 +34,10 @@ std::string HandleErrors::getDefaultReason(int code) {
     return "Unknown Error";
 }
 
-std::string HandleErrors::getErrorBodyFromFile(
-    const std::string &filePath, int code, const std::string &reason
-) {
+std::string HandleErrors::getErrorBodyFromFile(const std::string &filePath, int code, const std::string &reason) {
     std::ifstream file(filePath.c_str());
     if (!file.is_open()) {
-        // fallback → page par défaut
+
         std::ostringstream oss;
         oss << "<html><head><title>" << code << " " << reason 
             << "</title></head><body><h1>" 
@@ -52,25 +51,27 @@ std::string HandleErrors::getErrorBodyFromFile(
     return buffer.str();
 }
 
-std::string HandleErrors::generateErrorResponse(
-    int code,
-    const ServerConfig& serverConf,
-    const LocationConfig* locationConf,
-    const std::string& extraHeaders)
+std::string HandleErrors::generateErrorResponse(int code, const ServerConfig& serverConf, const LocationConfig* locationConf, const std::string& extraHeaders)
 {
-    (void)locationConf; // éviter warning unused parameter
+    (void)locationConf;
 
-    // Initialiser les messages par défaut
     static std::map<int, std::string> reasons = initReasonMap();
     std::string reason = "Unknown Error";
     if (reasons.find(code) != reasons.end())
         reason = reasons[code];
 
-    // Chercher error_page dans ServerConfig
     std::map<int,std::string>::const_iterator it = serverConf.errorPages.find(code);
     std::string body;
+
     if (it != serverConf.errorPages.end()) {
-        std::ifstream file(it->second.c_str());
+        std::string errorPath = it->second;
+
+        if (!errorPath.empty() && errorPath[0] == '/')
+            errorPath.erase(0, 1);
+
+        std::string fullPath = serverConf.root + "/" + errorPath;
+
+        std::ifstream file(fullPath.c_str());
         if (file) {
             std::ostringstream ss;
             ss << file.rdbuf();
@@ -78,7 +79,6 @@ std::string HandleErrors::generateErrorResponse(
         }
     }
 
-    // fallback si aucun fichier ou erreur non trouvée
     if (body.empty()) {
         std::ostringstream ss;
         ss << "<html><head><title>" << code << " " << reason 
@@ -87,7 +87,6 @@ std::string HandleErrors::generateErrorResponse(
         body = ss.str();
     }
 
-    // Construire réponse HTTP
     std::ostringstream oss;
     oss << "HTTP/1.1 " << code << " " << reason << "\r\n";
     oss << "Content-Type: text/html\r\n";

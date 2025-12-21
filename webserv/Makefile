@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+         #
+#    By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/08/28 14:08:13 by rhanitra          #+#    #+#              #
-#    Updated: 2025/09/24 16:36:28 by rivoinfo         ###   ########.fr        #
+#    Updated: 2025/12/21 11:49:28 by rhanitra         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -64,5 +64,27 @@ fclean: clean
 
 re: fclean all
 
-.PHONY: all clean fclean re
+run: all
+	@clear
+	@./$(NAME)
+
+runre: re
+	@./$(NAME)
+
+debug: all
+	@clear
+	@valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all --track-fds=yes ./$(NAME)
+	
+debugre: re all
+	@clear
+	@valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all --track-fds=yes ./$(NAME)
+
+# debug: all
+# 	@valgrind --leak-check=full --track-origins=yes --show-leak-kinds=all ./$(NAME)
+
+.PHONY: all clean fclean re run runre debug watch compress
+
+
+maxBody:
+	curl -X POST -d @background2.jpg http://localhost:8080
 

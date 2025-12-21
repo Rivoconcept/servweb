@@ -6,11 +6,13 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/08/28 14:10:20 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/27 15:40:20 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/12/19 13:11:31 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/httpConfig.hpp"
+#include "../include/configError.hpp"
+#include <arpa/inet.h>
 
 ConfigParser::ConfigParser(const std::string &configFilePathPath, const std::string &mimeTypesPath) 
     : _configFilePath(configFilePathPath), _mimeTypesPath(mimeTypesPath)
@@ -90,6 +92,9 @@ void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
             std::stringstream ss(value);
             std::string method;
             while (ss >> method) loc.methods.push_back(method);
+            for (size_t i = 0; i < loc.methods.size(); ++i)
+                if (loc.methods[i] != "GET" && loc.methods[i] != "POST" && loc.methods[i] != "DELETE")
+                    throw ConfigError("Invalid method in location block: " + loc.methods[i]);
         }
         else if (token == "autoindex")
             loc.autoindex = (value == "on");
@@ -109,22 +114,156 @@ void ConfigParser::parseLocationBlock(std::istream &input, LocationConfig &loc)
         }
         else if (token == "redirect")
         {
-            loc.returnCode = 301;
-            loc.returnPath = value;
+            std::stringstream ss(value);
+            std::string path;
+            int code = 0;
+
+            ss >> path;
+            ss >> code;
+
+            if (code == 0)
+                code = 302;
+
+            if (code < 300 || code >= 400)
+                throw ConfigError("redirect: invalid status code");
+
+            if (!isAbsoluteURL(path) && path[0] != '/')
+                throw ConfigError("redirect: invalid URL (must be absolute or start with /)");
+
+            loc.returnPath = path;
+            loc.returnCode = code;
         }
         else if (token == "default_file") loc.defaultFile = value;
         else if (token == "cgi_extension") loc.cgiExtension = value;
         else if (token == "cgi_path") loc.cgiPath = value;
-        else loc.directives[token] = value;
+        // else loc.directives[token] = value;
+        else throw std::runtime_error("Unknown directive in location block: " + token);
     }
 }
 
-void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
+
+void ConfigParser::formalizeSpaces(std::string &line)
 {
+    bool lastWasSpace = true;
+
+    for (std::string::iterator it = line.begin(); it != line.end();)
+    {
+        if (*it == '\n')
+        {
+            lastWasSpace = true;
+            ++it;
+        }
+        else if (*it == ' ' || *it == '\t')
+        {
+            if (lastWasSpace)
+            {
+                it = line.erase(it);
+            }
+            else
+            {
+                lastWasSpace = true;
+                ++it;
+            }
+        }
+        else
+        {
+            lastWasSpace = false;
+            ++it;
+        }
+    }
+}
+
+void ConfigParser::findMissingSemicolon(const std::string &text)
+{
+    for (std::string::const_iterator it = text.begin(); it != text.end(); ++it)
+    {
+        if (*it != '\n')
+            continue;
+
+        std::string::const_iterator prev = it;
+
+        if (prev == text.begin())
+            continue;
+
+        --prev;
+
+        while (prev != text.begin() && (*prev == ' ' || *prev == '\t'))
+            --prev;
+
+        if (*prev == '\n')
+            continue;
+
+        if (*prev == ';' || *prev == '{' || *prev == '}')
+            continue;
+
+        throw std::runtime_error("Error: missing ';'");
+    }
+}
+
+void ConfigParser::checkBraces(const std::string &text)
+{
+    int braceCount = 0;
+    int line = 1;
+
+    for (std::string::const_iterator it = text.begin(); it != text.end(); ++it)
+    {
+        if (*it == '{')
+            braceCount++;
+        else if (*it == '}')
+        {
+            braceCount--;
+            if (braceCount < 0)
+            {
+                std::ostringstream oss;
+                oss << line;
+                throw std::runtime_error(
+                    "Error: unexpected '}' at line " + oss.str());
+            }
+        }
+
+        if (*it == '\n')
+            line++;
+    }
+
+    if (braceCount != 0)
+        throw std::runtime_error("Error: unclosed '{'");
+}
+
+void ConfigParser::eraseClosingBraces(std::string &s)
+{
+    while (!s.empty() &&
+          (s[s.size() - 1] == ' ' ||
+           s[s.size() - 1] == '\n' ||
+           s[s.size() - 1] == '\t'))
+    {
+        s.erase(s.size() - 1);
+    }
+
+    while (!s.empty() && s[s.size() - 1] == '}')
+    {
+        s.erase(s.size() - 1);
+
+        while (!s.empty() &&
+              (s[s.size() - 1] == ' ' ||
+               s[s.size() - 1] == '\n' ||
+               s[s.size() - 1] == '\t'))
+        {
+            s.erase(s.size() - 1);
+        }
+    }
+    s += '\n';
+    s += '}';
+}
+
+
+void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
+{    
     std::string token;
+    
     while (input >> token)
     {
-        if (token == "}") break;
+        if (token == "}") 
+            break;
 
         if (token == "listen")
         {
@@ -134,15 +273,25 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
             size_t start = addr.find_first_not_of(" \t");
             size_t end   = addr.find_last_not_of(" \t");
             if (start != std::string::npos) addr = addr.substr(start, end - start + 1);
-
+            
             size_t colon = addr.find(':');
             if (colon != std::string::npos)
             {
                 server.host = addr.substr(0, colon);
-                server.listenPort = ftToInt(addr.substr(colon + 1));
+                std::string portStr = addr.substr(colon + 1);
+                
+                if (!isValidIPAddress(server.host))
+                    throw std::runtime_error("Error: Invalid IP address '" + server.host + "' in listen directive");
+                if (!isValidPortNumber(portStr))
+                    throw std::runtime_error("Error: Invalid port number '" + portStr + "' in listen directive");
+                
+                server.listenPort = ftToInt(portStr);
             }
             else
             {
+                if (!isValidPortNumber(addr))
+                    throw std::runtime_error("Error: Invalid port number '" + addr + "' in listen directive");
+                
                 server.host = "0.0.0.0";
                 server.listenPort = ftToInt(addr);
             }
@@ -151,12 +300,15 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
         {
             std::string line;
             std::getline(input, line, ';');
-
             std::stringstream ss(line);
             std::string name;
 
             while (ss >> name)
+            {
+                if (!isValidHostname(name))
+                    throw std::runtime_error("Error: Invalid server_name '" + name + "'");
                 server.serverNames.push_back(name);
+            }
         }
         else if (token == "root")
         {
@@ -173,7 +325,9 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
             std::getline(input, line, ';');
             std::stringstream ss(line);
             std::string file;
-            while (ss >> file) server.indexFiles.push_back(file);
+
+            while (ss >> file) 
+                server.indexFiles.push_back(file);
         }
         else if (token == "client_max_body_size")
         {
@@ -183,6 +337,9 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
             size_t end   = value.find_last_not_of(" \t");
             if (start != std::string::npos) value = value.substr(start, end - start + 1);
 
+            if (!isValidBodySize(value))
+                throw std::runtime_error("Error: Invalid client_max_body_size '" + value + "'");
+
             char unit = value[value.size() - 1];
             size_t multiplier = 1;
             if (unit == 'K' || unit == 'k') multiplier = 1024, value.resize(value.size() - 1);
@@ -190,6 +347,7 @@ void ConfigParser::parseServerBlock(std::istream &input, ServerConfig &server)
             else if (unit == 'G' || unit == 'g') multiplier = 1024*1024*1024, value.resize(value.size() - 1);
 
             server.clientMaxBodySize = ftToInt(value) * multiplier;
+            std::cout << "Set client_max_body_size to : " << server.clientMaxBodySize << " bytes\n";
         }
         else if (token == "error_page")
         {
@@ -229,6 +387,18 @@ void ConfigParser::parseHttpBlock(std::istream &input, HttpConfig &httpConfig)
             input >> brace;
             if (brace != "{") throw std::runtime_error("Expected '{' after server");
             parseServerBlock(input, server);
+            
+            // Check for duplicate (host, port) combinations
+            for (size_t i = 0; i < httpConfig.servers.size(); ++i) {
+                if (httpConfig.servers[i].host == server.host &&
+                    httpConfig.servers[i].listenPort == server.listenPort) {
+                    std::ostringstream oss;
+                    oss << "Error: Duplicate server on " << server.host << ":" << server.listenPort 
+                        << " (each server must have unique host:port)";
+                    throw std::runtime_error(oss.str());
+                }
+            }
+            
             httpConfig.servers.push_back(server);
         }
         else throw std::runtime_error("Unknown directive inside http block: " + token);
@@ -237,6 +407,12 @@ void ConfigParser::parseHttpBlock(std::istream &input, HttpConfig &httpConfig)
 
 HttpConfig ConfigParser::parse()
 {
+    // Validate syntax before parsing
+    std::string tmp = _fileContent;
+    formalizeSpaces(tmp);
+    eraseClosingBraces(tmp);
+    findMissingSemicolon(tmp);
+    
     HttpConfig httpConfig;
     std::istringstream config(_fileContent);
     std::string token;
@@ -269,7 +445,118 @@ HttpConfig ConfigParser::parse()
             throw std::runtime_error(errMsg);
         }
     }
+    // Validate: check that each server block has a listen directive
+    for (size_t i = 0; i < httpConfig.servers.size(); ++i)
+    {
+        if (httpConfig.servers[i].listenPort == 0)
+        {
+            throw std::runtime_error("Error: Server block missing required 'listen' directive");
+        }
+    }
 
     return httpConfig;
 }
+
+// Validation: check if port number is valid
+bool ConfigParser::isValidPortNumber(const std::string &portStr)
+{
+    if (portStr.empty())
+        return false;
+    
+    // Check if string is ALL digits (no letters or special chars)
+    for (size_t i = 0; i < portStr.length(); ++i)
+    {
+        if (!isdigit(portStr[i]))
+            return false;
+    }
+    
+    // Convert to int and check range
+    try
+    {
+        int port = ftToInt(portStr);
+        if (port < 1 || port > 65535)
+            return false;
+    }
+    catch (...)
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+// Validation: check if hostname/IP is valid format
+bool ConfigParser::isValidHostname(const std::string &hostname)
+{
+    if (hostname.empty())
+        return false;
+    
+    // Basic validation: check for invalid characters
+    for (size_t i = 0; i < hostname.length(); ++i)
+    {
+        char c = hostname[i];
+        // Allow alphanumeric, dots, hyphens, underscores
+        if (!isalnum(c) && c != '.' && c != '-' && c != '_')
+            return false;
+    }
+    
+    return true;
+}
+
+// Validation: check if body size value is valid
+bool ConfigParser::isValidBodySize(const std::string &sizeStr)
+{
+    if (sizeStr.empty())
+        return false;
+    
+    // Extract numeric part
+    std::string numPart = sizeStr;
+    char lastChar = sizeStr[sizeStr.length() - 1];
+    
+    // If ends with K, M, or G, remove it
+    if (lastChar == 'K' || lastChar == 'k' || lastChar == 'M' || lastChar == 'm' 
+        || lastChar == 'G' || lastChar == 'g')
+    {
+        numPart = sizeStr.substr(0, sizeStr.length() - 1);
+    }
+    
+    // Check if numeric part is all digits
+    for (size_t i = 0; i < numPart.length(); ++i)
+    {
+        if (!isdigit(numPart[i]))
+            return false;
+    }
+    
+    // Check if numeric part is valid
+    if (numPart.empty())
+        return false;
+    
+    try
+    {
+        int val = ftToInt(numPart);
+        if (val <= 0)
+            return false;
+    }
+    catch (...)
+    {
+        return false;
+    }
+    
+    return true;
+}
+
+// Validation: check if IP address is valid IPv4 format
+bool ConfigParser::isValidIPAddress(const std::string &ip)
+{
+    if (ip.empty())
+        return false;
+    
+    // Use inet_pton to validate IPv4 address format
+    sockaddr_in sa;
+    int result = inet_pton(AF_INET, ip.c_str(), &(sa.sin_addr));
+    
+    // result > 0 means valid IPv4 address
+    return result > 0;
+}
+
 

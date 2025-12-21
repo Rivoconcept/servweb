@@ -6,7 +6,7 @@
 /*   By: rhanitra <rhanitra@student.42antananari    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/11 17:40:36 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/12/07 15:12:48 by rhanitra         ###   ########.fr       */
+/*   Updated: 2025/12/21 13:18:05 by rhanitra         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,9 @@ int main(int argc, char **argv)
     try
     {
         // Ignorer SIGPIPE pour éviter les crash lors de send()
+        // Ignorer SIGCHLD - on va utiliser waitpid(WNOHANG) au lieu de handler
         signal(SIGPIPE, SIG_IGN);
+        signal(SIGCHLD, SIG_IGN);
         signal(SIGINT, handle_sigint);
 
         ConfigParser parser(configPath, mimeTypesPath);
@@ -51,9 +53,7 @@ int main(int argc, char **argv)
 
         Server server(config, types);
 
-        while (!g_stop) {
-            server.run();
-        }
+        server.run();
 
         std::cout << "\nSIGINT received, server cleanup...\n";
         server.cleanup();

@@ -6,7 +6,7 @@
 /*   By: rivoinfo <rivoinfo@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/09/12 17:48:25 by rhanitra          #+#    #+#             */
-/*   Updated: 2025/11/27 16:18:38 by rivoinfo         ###   ########.fr       */
+/*   Updated: 2025/12/19 15:50:46 by rivoinfo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <poll.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <cstring>
 
 HandleCGI::HandleCGI(const HttpRequest& req, const ServerConfig& serverConf, const LocationConfig& locationConf)
     : _request(req), _serverConf(serverConf), _locationConf(locationConf) {}
@@ -57,79 +58,117 @@ std::vector<std::string> HandleCGI::buildEnvStrings() const
     return envStrings;
 }
 
-std::string HandleCGI::execute()
+// Asynchronous CGI execution - fork without waiting
+CGIProcess* HandleCGI::execute()
 {
-    int pipe_out[2]; // pour stdout du CGI -> parent lit pipe_out[0]
-    int pipe_err[2]; // pour stderr du CGI -> parent lit pipe_err[0]
-    int pipe_in[2];  // pour stdin du CGI <- parent écrit pipe_in[1]
-    if (pipe(pipe_out) == -1 || pipe(pipe_err) == -1 || pipe(pipe_in) == -1)
-        throw std::runtime_error("pipe failed");
+    int pipe_out[2];
+    int pipe_err[2];
+    int pipe_in[2];
+    
+    if (pipe(pipe_out) == -1 || pipe(pipe_err) == -1 || pipe(pipe_in) == -1) {
+        std::cerr << "execute: pipe failed\n";
+        return NULL;
+    }
+
+    // Extract string data into C buffers BEFORE fork to avoid heap issues
+    // Note: We access _locationConf and _request BEFORE fork - they're invalid after fork in child
+    char cgiPath_buf[512];
+    char scriptPath_buf[512];
+    char body_buf[4096];
+    size_t body_size = 0;
+    int timeout_val = 10000;
+    
+    {
+        // Copy CGI path
+        const char *path = _locationConf.cgiPath.c_str();
+        size_t len = _locationConf.cgiPath.length();
+        if (len >= sizeof(cgiPath_buf)) len = sizeof(cgiPath_buf) - 1;
+        memcpy(cgiPath_buf, path, len);
+        cgiPath_buf[len] = '\0';
+        
+        // Copy script path (reconstructed)
+        std::string fullScriptPath = _locationConf.root + _request.uri.substr(_locationConf.path.size());
+        const char *spath = fullScriptPath.c_str();
+        size_t slen = fullScriptPath.length();
+        if (slen >= sizeof(scriptPath_buf)) slen = sizeof(scriptPath_buf) - 1;
+        memcpy(scriptPath_buf, spath, slen);
+        scriptPath_buf[slen] = '\0';
+        
+        // Copy body
+        if (!_request.body.empty()) {
+            const char *bdata = _request.body.data();
+            size_t blen = _request.body.length();
+            if (blen >= sizeof(body_buf)) blen = sizeof(body_buf) - 1;
+            memcpy(body_buf, bdata, blen);
+            body_buf[blen] = '\0';
+            body_size = blen;
+        }
+        
+        // Copy timeout
+        timeout_val = _locationConf.cgiTimeoutSeconds > 0 ? (_locationConf.cgiTimeoutSeconds * 1000) : 10000;
+    }
+    
+    // Build environment BEFORE fork
+    buildEnv();
+    std::vector<std::string> envStrings = buildEnvStrings();
+    bool hasRedirect = false;
+    for (size_t i = 0; i < envStrings.size(); ++i) {
+        if (envStrings[i].rfind("REDIRECT_STATUS=", 0) == 0) { hasRedirect = true; break; }
+    }
+    if (!hasRedirect) envStrings.push_back("REDIRECT_STATUS=200");
+
+    // Create C-style arrays BEFORE fork
+    std::vector<char*> envp_data;
+    envp_data.reserve(envStrings.size() + 1);
+    for (size_t i = 0; i < envStrings.size(); ++i)
+        envp_data.push_back(const_cast<char*>(envStrings[i].c_str()));
+    envp_data.push_back(NULL);
 
     pid_t pid = fork();
-    if (pid < 0)
-        throw std::runtime_error("fork failed");
+    if (pid < 0) {
+        std::cerr << "execute: fork failed\n";
+        close(pipe_out[0]); close(pipe_out[1]);
+        close(pipe_err[0]); close(pipe_err[1]);
+        close(pipe_in[0]);  close(pipe_in[1]);
+        return NULL;
+    }
 
-    if (pid == 0) // child
+    if (pid == 0) // child - DO NOT USE any parent member variables here!
     {
-        // --- Child: préparer les redirections ---
-        // ferme les extrémités non utilisées
-        close(pipe_out[0]); // child n'a pas besoin de read end for stdout
-        close(pipe_in[1]);  // child n'a pas besoin de write end for stdin
+        close(pipe_out[0]);
+        close(pipe_in[1]);
 
-    // redirect stdout -> pipe_out[1], stderr -> pipe_err[1]
-    if (dup2(pipe_out[1], STDOUT_FILENO) == -1) perror("dup2 stdout");
-    if (dup2(pipe_err[1], STDERR_FILENO) == -1) perror("dup2 stderr");
-
-        // redirect stdin <- pipe_in[0]
+        if (dup2(pipe_out[1], STDOUT_FILENO) == -1) perror("dup2 stdout");
+        if (dup2(pipe_err[1], STDERR_FILENO) == -1) perror("dup2 stderr");
         if (dup2(pipe_in[0], STDIN_FILENO) == -1) perror("dup2 stdin");
 
-    // close now duplicated fds
-    close(pipe_out[1]);
-    close(pipe_err[1]);
-    close(pipe_in[0]);
-
-        // --- Construire envp ---
-        // Build std::string vector first so the data remains valid until execve()
-        std::vector<std::string> envStrings = buildEnvStrings();
-
-        // s'assurer de REDIRECT_STATUS=200
-        bool hasRedirect = false;
-        for (size_t i = 0; i < envStrings.size(); ++i) {
-            if (envStrings[i].rfind("REDIRECT_STATUS=", 0) == 0) { hasRedirect = true; break; }
-        }
-        if (!hasRedirect) envStrings.push_back("REDIRECT_STATUS=200");
-
-        std::vector<char*> envp;
-        envp.reserve(envStrings.size() + 1);
-        for (size_t i = 0; i < envStrings.size(); ++i)
-            envp.push_back(const_cast<char*>(envStrings[i].c_str()));
-        envp.push_back(NULL);
-
-        // --- Construire argv proprement (EVITER pointer sur std::string temporaire) ---
-        std::string scriptPath = _locationConf.root + _request.uri.substr(_locationConf.path.size());
-        std::vector<char*> argv;
-        argv.push_back(const_cast<char*>(_locationConf.cgiPath.c_str())); // program path
-        argv.push_back(const_cast<char*>(scriptPath.c_str()));           // script path
-        argv.push_back(NULL);
-
-        // --- Execve ---
-        execve(argv[0], &argv[0], &envp[0]);
-
-        // Si execve échoue
-        perror("execve failed");
-        _exit(127); // use _exit to avoid flushing parent's buffers twice
-    }
-    else // parent
-    {
-        // parent n'a pas besoin des extrémités d'enfant (write ends de out/err)
         close(pipe_out[1]);
         close(pipe_err[1]);
         close(pipe_in[0]);
 
-        // Si la requête a un body (POST), on l'envoie au stdin du child
-        if (!_request.body.empty()) {
-            ssize_t toWrite = _request.body.size();
-            const char* data = _request.body.data();
+        // Use ONLY the C buffers which are on stack and guaranteed to be valid
+        char *argv[3];
+        argv[0] = cgiPath_buf;
+        argv[1] = scriptPath_buf;
+        argv[2] = NULL;
+
+        // Call execve with environment
+        execve(argv[0], argv, &envp_data[0]);
+        
+        // If execve fails
+        perror("execve failed");
+        _exit(127);
+    }
+    else // parent
+    {
+        close(pipe_out[1]);
+        close(pipe_err[1]);
+        close(pipe_in[0]);
+
+        // Write request body if any
+        if (body_size > 0) {
+            ssize_t toWrite = body_size;
+            const char* data = body_buf;
             while (toWrite > 0) {
                 ssize_t w = write(pipe_in[1], data, toWrite);
                 if (w < 0) {
@@ -140,105 +179,60 @@ std::string HandleCGI::execute()
                 data += w;
             }
         }
-        // fermer la pipe stdin pour indiquer EOF au child
         close(pipe_in[1]);
 
-        // Lire la sortie stdout et stderr du child simultanément
-        std::string out;
-        std::string err;
-        const int fd_out = pipe_out[0];
-        const int fd_err = pipe_err[0];
-        struct pollfd fds[2];
-        fds[0].fd = fd_out; fds[0].events = POLLIN;
-        fds[1].fd = fd_err; fds[1].events = POLLIN;
+        CGIProcess *cgiProc = new CGIProcess();
+        cgiProc->pid = pid;
+        cgiProc->pipe_out = pipe_out[0];
+        cgiProc->pipe_err = pipe_err[0];
+        cgiProc->out_eof = false;
+        cgiProc->err_eof = false;
+        cgiProc->startTime = time(NULL);
+        cgiProc->timeoutMs = timeout_val;
 
-        bool out_eof = false, err_eof = false;
-        char buffer[4096];
+        int flags = fcntl(pipe_out[0], F_GETFL, 0);
+        fcntl(pipe_out[0], F_SETFL, flags | O_NONBLOCK);
+        flags = fcntl(pipe_err[0], F_GETFL, 0);
+        fcntl(pipe_err[0], F_SETFL, flags | O_NONBLOCK);
 
-        // Timeout for CGI execution in milliseconds
-        // Use per-location setting if provided, otherwise fallback to 10s
-        int timeoutMs = 10000;
-        if (_locationConf.cgiTimeoutSeconds > 0) {
-            // beware of overflow: multiply as int
-            timeoutMs = _locationConf.cgiTimeoutSeconds * 1000;
-        }
-        struct timeval tv_start, tv_now;
-        gettimeofday(&tv_start, NULL);
-
-        while (!(out_eof && err_eof)) {
-            // compute remaining time
-            gettimeofday(&tv_now, NULL);
-            long elapsed = (tv_now.tv_sec - tv_start.tv_sec) * 1000L + (tv_now.tv_usec - tv_start.tv_usec) / 1000L;
-            int remaining = timeoutMs - static_cast<int>(elapsed);
-            if (remaining <= 0) {
-                // timeout: kill child and cleanup
-                std::cerr << "CGI timeout: killing child pid " << pid << std::endl;
-                kill(pid, SIGKILL);
-                // close fds to break reads
-                close(fd_out);
-                close(fd_err);
-                // reap child
-                int status = 0;
-                waitpid(pid, &status, 0);
-                throw std::runtime_error("handleCGI: child timed out");
-            }
-
-            int ret = poll(fds, 2, remaining);
-            if (ret < 0) {
-                if (errno == EINTR) continue;
-                break;
-            }
-            if (ret == 0) {
-                // poll timeout loop will check elapsed and kill if needed
-                continue;
-            }
-
-            // stdout
-            if (!out_eof && (fds[0].revents & POLLIN)) {
-                ssize_t n = read(fd_out, buffer, sizeof(buffer));
-                if (n > 0) out.append(buffer, n);
-                else if (n == 0) out_eof = true;
-                else if (errno == EINTR) continue;
-                else out_eof = true;
-            }
-            if (!out_eof && (fds[0].revents & (POLLHUP | POLLERR))) out_eof = true;
-
-            // stderr
-            if (!err_eof && (fds[1].revents & POLLIN)) {
-                ssize_t n = read(fd_err, buffer, sizeof(buffer));
-                if (n > 0) err.append(buffer, n);
-                else if (n == 0) err_eof = true;
-                else if (errno == EINTR) continue;
-                else err_eof = true;
-            }
-            if (!err_eof && (fds[1].revents & (POLLHUP | POLLERR))) err_eof = true;
-        }
-
-        close(fd_out);
-        close(fd_err);
-
-        // Reaper le child
-        int status = 0;
-        waitpid(pid, &status, 0);
-
-        // If there is any stderr output or non-zero exit, log and throw
-        if (!err.empty()) {
-            std::cerr << "CGI stderr: " << err << std::endl;
-            throw std::runtime_error("handleCGI: child produced stderr");
-        }
-        if (WIFEXITED(status)) {
-            int exitCode = WEXITSTATUS(status);
-            if (exitCode != 0) {
-                std::ostringstream oss;
-                oss << "handleCGI: child exited with code " << exitCode;
-                throw std::runtime_error(oss.str());
-            }
-        } else if (WIFSIGNALED(status)) {
-            std::ostringstream oss;
-            oss << "handleCGI: child terminated by signal " << WTERMSIG(status);
-            throw std::runtime_error(oss.str());
-        }
-
-        return out;
+        return cgiProc;
     }
+}
+
+// Read available data from CGI process (non-blocking)
+std::string HandleCGI::readCGIOutput(CGIProcess *cgiProc)
+{
+    if (!cgiProc) return std::string();
+    
+    char buffer[4096];
+    
+    // Try to read from stdout
+    if (!cgiProc->out_eof && cgiProc->pipe_out >= 0) {
+        ssize_t n = read(cgiProc->pipe_out, buffer, sizeof(buffer));
+        if (n > 0) {
+            cgiProc->output.append(buffer, n);
+        } else if (n == 0) {
+            cgiProc->out_eof = true;
+        } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // No data available right now
+        } else {
+            cgiProc->out_eof = true;
+        }
+    }
+    
+    // Try to read from stderr
+    if (!cgiProc->err_eof && cgiProc->pipe_err >= 0) {
+        ssize_t n = read(cgiProc->pipe_err, buffer, sizeof(buffer));
+        if (n > 0) {
+            cgiProc->error.append(buffer, n);
+        } else if (n == 0) {
+            cgiProc->err_eof = true;
+        } else if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            // No data available right now
+        } else {
+            cgiProc->err_eof = true;
+        }
+    }
+    
+    return cgiProc->output;
 }
